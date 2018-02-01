@@ -1,16 +1,19 @@
-import json
-import datetime
 import syslog
 import time
-import weedb
-import weewx
 import weeutil.weeutil
-
+import weewx
+import weewx.engine
+import weewx.manager
 from weewx.engine import StdService
 
+VERSION = "0.4.1-lh"
+
+#
+# 2015-12-28 Modified by Luc Heijst to work with weewx version 3.3.1
+#
+
 if weewx.__version__ < "3":
-    raise weewx.UnsupportedFeature("weewx 3 is required, found %s" %
-                                   weewx.__version__)
+    raise weewx.UnsupportedFeature("weewx 3 is required, found %s" % weewx.__version__)
 
 schema = [
     ('dateTime', 'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
@@ -76,373 +79,61 @@ class RawService(StdService):
     def __init__(self, engine, config_dict):
         self.config_dict = config_dict
         super(RawService, self).__init__(engine, config_dict)
-        self.dataLimit = int(config_dict['Raw']['data_limit'])
-        self.binding = config_dict['Raw']['raw_data_binding']  #lh
+        syslog.syslog(syslog.LOG_INFO, "raw: service version is %s" % VERSION)
 
-        # setup database
+        d = config_dict.get('Raw', {})
+        self.dataLimit = int(d.get('data_limit', 24))
+
+        # get the database parameters we need to function
+        self.binding = d.get('data_binding', 'raw_binding')
+        self.dbm = self.engine.db_binder.get_manager(data_binding=self.binding, initialize=True)
+
+        # be sure schema in database matches the schema we have
+        dbcol = self.dbm.connection.columnsOf(self.dbm.table_name)
         dbm_dict = weewx.manager.get_manager_dict(
-            config_dict['DataBindings'], config_dict['Databases'], self.binding,
-            default_binding_dict=get_default_binding_dict())
-        with weewx.manager.open_manager(dbm_dict, initialize=True) as dbm:
-            # ensure schema on disk matches schema in memory
-            dbcol = dbm.connection.columnsOf(dbm.table_name)
-            memcol = [x[0] for x in dbm_dict['schema']]
-            if dbcol != memcol:
-                raise Exception('%s: schema mismatch: %s != %s' %
-                                (self.method_id, dbcol, memcol))
+            config_dict['DataBindings'], config_dict['Databases'], self.binding)
+        memcol = [x[0] for x in dbm_dict['schema']]
+        if dbcol != memcol:
+            raise Exception('raw: schema mismatch: %s != %s' % (dbcol, memcol))
 
-        #lh  self.setupRawDatabase(config_dict)
         self.lastLoopDateTime = 0
         self.lastPrunedDateTime = 0
-        self.redisPublishEnabled = 0
-        if 'Push' in config_dict['Raw']:
-            self.redisPublishEnabled = int(config_dict['Raw']['Push']['redis_enabled']) == 1
-            self.redisChannel = config_dict['Raw']['Push']['redis_channel']
-            self.redisConnect(config_dict)
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
 
-    def newLoopPacket(self, event):
-        packet = event.packet
-        dbm_dict = weewx.manager.get_manager_dict(
-            self.config_dict['DataBindings'], self.config_dict['Databases'], self.binding,
-            default_binding_dict=get_default_binding_dict())
-        with weewx.manager.open_manager(dbm_dict, initialize=True) as dbm:
-            # It's possible for records with duplicate dateTimes - this occurs when an archive packet
-            # is processed since the LOOP packets are queued up and then returned immediately when
-            # looping resumes, coupled with the fact that for Vantage Pro consoles the dateTime value is
-            # added by weewx. So, for database storage, skip the duplicates until we get a new one to
-            # avoid a duplicate key error, but publish them all to redis regardless.
-            dateTime = packet['dateTime']
-            if dateTime != self.lastLoopDateTime:
-                dbm.addRecord(packet)
-                #lh  self.rawData.addRecordAndTruncate(packet, self.dataLimit)
-                self.lastLoopDateTime = dateTime
-            if dateTime > self.lastPrunedDateTime - 300:
-                if self.dataLimit is not None:
-                    RawService.prune_rawdata(dbm, dateTime - (self.dataLimit * 3600))
-                self.lastPrunedDateTime = dateTime
-            self.redisPublish(packet)
-
-    def jsonSerializeObject(self, obj):
-        if isinstance(obj, datetime.time):
-            return obj.isoformat()
-        syslog.syslog(syslog.LOG_NOTICE, "Raw: defaulting json serialization of raw value of type '%s': %s" % (type(obj), obj))
-        return None
-
-    def redisPublish(self, packet):
-        if self.redisPublishEnabled:
-            rawWxData = json.dumps(packet, default=self.jsonSerializeObject)
-            channel = self.redisChannel
-            #syslog.syslog(syslog.LOG_DEBUG, "Raw: publishing raw packet to redis channel '%s': %s" % (channel, rawWxData))
-            try:
-                self.publisher.publish(channel, rawWxData)
-            # connection problem isn't revealed until now (via ConnectionError)
-            except redis.RedisError as e:
-                # try again next time
-                syslog.syslog(syslog.LOG_ERR, "Raw: unable to publish raw packet to redis channel. Reason: %s" % e)
-
-    def setupRawDatabase(self, config_dict):
-        raw_db = config_dict['Raw']['raw_database']
-        self.rawData = RawData.open_with_create(config_dict['Databases'][raw_db], self.defaultRawSchema)
-        syslog.syslog(syslog.LOG_INFO, "Raw: Using raw database: %s" % (raw_db,))
-
-    def redisConnect(self, config_dict):
-        try:
-            global redis
-            import redis
-        except ImportError as e:
-            syslog.syslog(syslog.LOG_ERR, "Raw: unable to import redis-py module. Is it installed? Reason: %s" % e)
-            raise
-        push_config = config_dict['Raw']['Push']
-        host = push_config['redis_host']
-        port = int(push_config['redis_port'])
-        syslog.syslog(syslog.LOG_INFO, "Raw: Using redis server: %s:%s " % (host, port))
-        self.publisher = redis.Redis(host=host, port=port, db=0)
-
-    def _addRecord(self, record_obj):
-
-        # Determine if record_obj is just a single dictionary instance (in which
-        # case it will have method 'keys'). If so, wrap it in something iterable
-        # (a list):
-        record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
-
-        for record in record_list:
-
-            if record['dateTime'] is None:
-                syslog.syslog(syslog.LOG_ERR, "Raw: raw record with null time encountered.")
-                raise weewx.ViolatedPrecondition("Raw record with null time encountered.")
-
-            dbm_dict = weewx.manager.get_manager_dict(
-                self.config_dict['DataBindings'],
-                self.config_dict['Databases'],
-                self.binding,
-                default_binding_dict=get_default_binding_dict())
-            with weewx.manager.open_manager(dbm_dict) as dbm:
-                # Only data types that appear in the database schema can be inserted.
-                # To find them, form the intersection between the set of all record
-                # keys and the set of all sql keys
-                self.sqlkeys = dbm.connection.columnsOf(dbm.table_name)
-                record_key_set = set(record.keys())
-                insert_key_set = record_key_set.intersection(self.sqlkeys)
-                # Convert to an ordered list:
-                key_list = list(insert_key_set)
-                # Get the values in the same order:
-                value_list = [record[k] for k in key_list]
-
-                # This will a string of sql types, separated by commas. Because
-                # some of the weewx sql keys (notably 'interval') are reserved
-                # words in MySQL, put them in backquotes.
-                k_str = ','.join(["`%s`" % k for k in key_list])
-                # This will be a string with the correct number of placeholder question marks:
-                q_str = ','.join('?' * len(key_list))
-
-                # Form the SQL insert statement:
-                sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (dbm.table_name, k_str, value_list)
-                try:
-                    dbm.genSql(sql_insert_stmt)
-                    syslog.syslog(syslog.LOG_DEBUG, "Raw: sql %s list %s" % (sql_insert_stmt, value_list))
-                    syslog.syslog(syslog.LOG_DEBUG, "Raw: added raw record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
-                except Exception, e:
-                    syslog.syslog(syslog.LOG_ERR, "Raw: unable to add raw record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
-                    syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
-
-    @staticmethod
-    def prune_rawdata(dbm, ts, max_tries=3, retry_wait=10):
+    def prune_rawdata(self, dbm, ts, max_tries=3, retry_wait=10):
         """remove rawdata older than data_limit hours from the database"""
-
         sql = "delete from %s where dateTime < %d" % (dbm.table_name, ts)
         for count in range(max_tries):
             try:
-                syslog.syslog(syslog.LOG_DEBUG, 'deleting rawdata prior to %d' % ts)
                 dbm.getSql(sql)
-                syslog.syslog(syslog.LOG_INFO, 'deleted rawdata prior to %d' % ts)
+                syslog.syslog(syslog.LOG_INFO, 'raw: deleted rawdata prior to %s' % weeutil.weeutil.timestamp_to_string(ts))
                 break
             except Exception, e:
-                syslog.syslog(syslog.LOG_ERR, 'prune failed (attempt %d of %d): %s' % ((count + 1), max_tries, e))
-                syslog.syslog(syslog.LOG_INFO, 'waiting %d seconds before retry' % retry_wait)
+                syslog.syslog(syslog.LOG_ERR, 'raw: prune failed (attempt %d of %d): %s' % ((count + 1), max_tries, e))
+                syslog.syslog(syslog.LOG_INFO, 'raw: waiting %d seconds before retry' % retry_wait)
                 time.sleep(retry_wait)
         else:
-            raise Exception('prune failed after %d attemps' % max_tries)
+            raise Exception('raw: prune failed after %d attemps' % max_tries)
 
-    # schema based on wview history table 
-    # TODO finalize
-    defaultRawSchema = [('dateTime', 'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
-        ('barometer', 'REAL'),
-        #('pressure', 'REAL'),
-        #('altimeter', 'REAL'),
-        ('inTemp', 'REAL'),
-        ('outTemp', 'REAL'),
-        ('inHumidity', 'REAL'),
-        ('outHumidity', 'REAL'),
-        ('windSpeed', 'REAL'),
-        ('windDir', 'REAL'),
-        #('windGust', 'REAL'),
-        #('windGustDir', 'REAL'),
-        ('rainRate', 'REAL'),
-        ('dayRain', 'REAL'), # rain
-        ('dewpoint', 'REAL'),
-        ('windchill', 'REAL'),
-        ('heatindex', 'REAL'),
-        #('rxCheckPercent', 'REAL'),
-        ('dayET', 'REAL'), # ET
-        ('radiation', 'REAL'),
-        ('UV', 'REAL'),
-        ('extraTemp1', 'REAL'),
-        ('extraTemp2', 'REAL'),
-        ('extraTemp3', 'REAL'),
-        ('soilTemp1', 'REAL'),
-        ('soilTemp2', 'REAL'),
-        ('soilTemp3', 'REAL'),
-        ('soilTemp4', 'REAL'),
-        ('leafTemp1', 'REAL'),
-        ('leafTemp2', 'REAL'),
-        ('extraHumid1', 'REAL'),
-        ('extraHumid2', 'REAL'),
-        ('soilMoist1', 'REAL'),
-        ('soilMoist2', 'REAL'),
-        ('soilMoist3', 'REAL'),
-        ('soilMoist4', 'REAL'),
-        ('leafWet1', 'REAL'),
-        ('leafWet2', 'REAL'),
-        ('txBatteryStatus', 'REAL'),
-        ('consBatteryVoltage', 'REAL')]
-        #('hail', 'REAL'),
-        #('hailRate', 'REAL'),
-        #('heatingTemp', 'REAL'),
-        #('heatingVoltage', 'REAL'),
-        #('supplyVoltage', 'REAL'),
-        #('referenceVoltage', 'REAL'),
-        #('windBatteryStatus', 'REAL'),
-        #('rainBatteryStatus', 'REAL'),
-        #('outTempBatteryStatus', 'REAL'),
-        #('inTempBatteryStatus', 'REAL')i
-
-
-class RawData(object):
-
-    def __init__(self, connection):
-        """Initialize an object of type RawData 
-        
-        If the database is uninitialized, an exception of type weewx.UninitializedDatabase
-        will be raised. 
-        
-        connection: A weedb connection to the raw database.
-        """
-        self.connection = connection
-        try:
-            self.sqlkeys = self._getTypes()
-        except weedb.OperationalError, e:
-            self.close()
-            raise weewx.UninitializedDatabase(e)
-
-    @staticmethod
-    def open(raw_db_dict):
-        """Open a Raw database.
-        
-        An exception of type weedb.OperationalError will be raised if the
-        database does not exist.
-        
-        An exception of type StandardError will be raised if the database
-        exists, but has not been initialized.
-        
-        Returns:
-        An instance of RawData."""
-        connection = weedb.connect(raw_db_dict)
-        return RawData(connection)
-
-    @staticmethod
-    def open_with_create(raw_db_dict, rawSchema):
-        """Open a Raw database, initializing it if necessary.
-        
-        raw_db_dict: A database dictionary holding the information necessary
-        to open the database.
-        
-        rawSchema: The schema to be used
-        
-        Returns: 
-        An instance of RawData""" 
-
-        try:
-            rawData = RawData.open(raw_db_dict)
-            # The database exists and has been initialized. Return it.
-            return rawData
-        except (weedb.OperationalError, weewx.UninitializedDatabase):
-            pass
-        
-        # First try to create the database. If it already exists, an exception will
-        # be thrown.
-        try:
-            weedb.create(raw_db_dict)
-        except weedb.DatabaseExists:
-            pass
-
-        # List comprehension of the types, joined together with commas. Put
-        # the SQL type in backquotes to avoid conflicts with reserved words
-        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in rawSchema])
-
-        _connect = weedb.connect(raw_db_dict)
-        try:
-            with weedb.Transaction(_connect) as _cursor:
-                _cursor.execute("CREATE TABLE raw (%s);" % _sqltypestr)
-                
-        except Exception, e:
-            _connect.close()
-            syslog.syslog(syslog.LOG_ERR, "raw: Unable to create database raw.")
-            syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
-            raise
-
-        syslog.syslog(syslog.LOG_NOTICE, "raw: created schema for database 'raw'")
-        return RawData(_connect)
-
-    def addRecordAndTruncate(self, record, data_limit):
-        """Commit a single record to the raw data and truncate data that is outside the limit."""
-
-        with weedb.Transaction(self.connection) as cursor:
-
-            self._addRecord(cursor, record)
-            self._truncateOldRecords(cursor, record, data_limit)
-
-    def addRecord(self, record_obj):
-        """Commit a single record or a collection of records to the raw data table.
-        
-        record_obj: Either a data record, or an iterable that can return data
-        records. Each data record must look like a dictionary, where the keys
-        are the SQL types and the values are the values to be stored in the
-        database."""
-
-        with weedb.Transaction(self.connection) as cursor:
-
-            self._addRecord(cursor, record)
-
-    def _addRecord(self, cursor, record_obj):
-        
-        # Determine if record_obj is just a single dictionary instance (in which
-        # case it will have method 'keys'). If so, wrap it in something iterable
-        # (a list):
-        record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
-
-        for record in record_list:
-
-            if record['dateTime'] is None:
-                syslog.syslog(syslog.LOG_ERR, "Raw: raw record with null time encountered.")
-                raise weewx.ViolatedPrecondition("Raw record with null time encountered.")
-
-            # Only data types that appear in the database schema can be inserted.
-            # To find them, form the intersection between the set of all record
-            # keys and the set of all sql keys
-            record_key_set = set(record.keys())
-            insert_key_set = record_key_set.intersection(self.sqlkeys)
-            # Convert to an ordered list:
-            key_list = list(insert_key_set)
-            # Get the values in the same order:
-            value_list = [record[k] for k in key_list]
-            
-            # This will a string of sql types, separated by commas. Because
-            # some of the weewx sql keys (notably 'interval') are reserved
-            # words in MySQL, put them in backquotes.
-            k_str = ','.join(["`%s`" % k for k in key_list])
-            # This will be a string with the correct number of placeholder question marks:
-            q_str = ','.join('?' * len(key_list))
-            # Form the SQL insert statement:
-            sql_insert_stmt = "INSERT INTO raw (%s) VALUES (%s)" % (k_str, q_str) 
-            try:
-                cursor.execute(sql_insert_stmt, value_list)
-                syslog.syslog(syslog.LOG_DEBUG, "Raw: added raw record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
-            except Exception, e:
-                syslog.syslog(syslog.LOG_ERR, "Raw: unable to add raw record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
-                syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
-
-    def _truncateOldRecords(self, cursor, record, data_limit):
-
-        # truncate the old data if enabled
-        if data_limit > 0:
-            sql_delete_stmt = "DELETE FROM raw WHERE dateTime < ?"
-            truncate_to = int(record['dateTime']) - (data_limit * 3600)
-            cursor.execute(sql_delete_stmt, (truncate_to,))
-            syslog.syslog(syslog.LOG_DEBUG, "RawData: truncated raw records older than %s (%s hours)" % (weeutil.weeutil.timestamp_to_string(truncate_to), data_limit))
-
-    def _getTypes(self):
-        """Returns the types appearing in a raw database.
-        
-        Raises exception of type weedb.OperationalError if the 
-        database has not been initialized."""
-        
-        # Get the columns in the table
-        column_list = self.connection.columnsOf('raw')
-        return column_list
-
-    def close(self):
-        self.connection.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, etyp, einst, etb):
-        self.close()    
-
+    def newLoopPacket(self, event):
+        packet = event.packet
+        prune_period = 300
+        # It's possible for records with duplicate dateTimes - this occurs when an archive packet
+        # is processed since the LOOP packets are queued up and then returned immediately when
+        # looping resumes, coupled with the fact that for Vantage Pro consoles the dateTime value is
+        # added by weewx. So, for database storage, skip the duplicates until we get a new one to
+        # avoid a duplicate key error, but publish them all to redis regardless.
+        dateTime = packet['dateTime']
+        if dateTime != self.lastLoopDateTime:
+            self.dbm.addRecord(packet)
+            self.lastLoopDateTime = dateTime
+        if dateTime > (self.lastPrunedDateTime + prune_period):
+            if self.dataLimit is not None:
+                ts = ((dateTime - (self.dataLimit * 3600)) / prune_period) * prune_period  # preset on 5-min boundary
+                self.prune_rawdata(self.dbm, ts, 2, 5)
+            self.lastPrunedDateTime = dateTime
 
 ##### LOOP packet data example #####
-
 #   {
 #      'monthET' : 0.0,
 #      'dewpoint' : 32.89591611995311,
