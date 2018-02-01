@@ -1,6 +1,5 @@
 import Queue
 import json
-import time
 import syslog
 import weewx
 import socket
@@ -23,7 +22,13 @@ class AbortAndExit(Exception):
     """Raised when it's time to shut down the thread."""
 
 #
-# 2015-11-02 Modified by Luc Heijst to work with weewx version 3.2.1
+# Filename: sync_lh6.py
+# 2015-11-02 Modified sync.py (of mesowx 0.4.0) by Luc Heijst to work with weewx version 3.2.1 and later
+# 2015-11-02 version 3 Don't use this version; works only with a MySQL database
+# 2015-11-02 version 4 Works with both local weewx MySQL and sqlite databases
+# 2016-03-01 version 5 Don't use this version; it has a lockup in backfill when the remote routines can't be found
+# 2016-03-02 version 6 Works only with a local weewx MySQL database; no fatal messages when problems occur
+#                      with the remote computer
 #
 # archive sync:
 #   premise
@@ -68,74 +73,46 @@ class SyncService(weewx.engine.StdService):
         self.exit_event = threading.Event()
         self.archive_queue = Queue.Queue()
         self.raw_queue = Queue.Queue()
+        self.backfill_queue = Queue.Queue()
         # keeps track of the dateTime of the last loop packet seen in order to prevent sending 
         # packets with the same dateTime value, see new_loop_packet() for more info
         self.lastLoopDateTime = 0
         # using a http connection pool to potentially save some overhead and server
         # burden if keep alive is enabled, maxsize is set to 2 since there are two threads
-        # using the pool. Note that keep alive will need to be longer than the loop interval 
+        # using the pool. Note that keep alive will need to be longer than the loop interval
         # to be effective (which may not make sense for longer intervals)
         self.http_pool = urllib3.connectionpool.connection_from_url(self.sync_config['remote_server_url'], maxsize=2)
-        # the maximum number of reords to back_fill (defualt: no limit)
-        self.backfill_limit = int(self.sync_config.get('archive_backfill_limit', 0))
-        # the max number of records to send in a request (default: 200)
-        self.batch_size = int(self.sync_config.get('archive_batch_size', 200))
-        # the path on the remote server of the data update api (usually won't ever change this)
-        self.update_url_path = self.sync_config.get('server_update_path', "updateData.php")
-        # default number of times to retry http requests before giving up
-        self.http_max_tries = 3
-        # default time to wait in seconds before retrying http requests
-        self.http_retry_interval = 0
-        # the base url of the remote server to sync to
-        self.remote_server_url = self.sync_config['remote_server_url']
-        # the url that will be used to update data to on the remote server
-        self.update_url = self.remote_server_url + self.update_url_path
-        # the url that will be used to query for the latest dateTime on the remote server
-        # the path on the remote server of the data query api (usually won't ever change this)
-        self.server_data_path = self.sync_config.get('server_data_path', "data.php")
-        self.latest_url = self.remote_server_url + self.server_data_path
-        # the number of seconds to wait between sending batches (default .5 seconds)
-        self.batch_send_interval = float(self.sync_config.get('archive_batch_send_interval', 0.5))
-        # the entity id to sync to on the remote server
-        self.entity_id = self.sync_config['archive_entity_id']
-        # the security key that will be sent along with updates to the entity
-        self.security_key = self.sync_config['archive_security_key']
         # Last dateTime synced records on webserver
         global last_datetime_synced
         last_datetime_synced = None
-        # Open default database
-        self.dbm = self.engine.db_binder.get_manager()
-        self.running = True
-        self.backfillRequest = True
-        self.backFilling = False
 
         # if a archive_entity_id is configured, then bind & create the thead to sync archive records
         if 'archive_entity_id' in self.sync_config:
+            # start backfill thread
+            self.backfill_thread = BackfillSyncThread(self.backfill_queue, self.engine, self.config_dict,
+                                                      self.exit_event, self.http_pool, **self.sync_config)
+            self.backfill_thread.start()
+            syslog.syslog(syslog.LOG_DEBUG, "sync backfill: will backfill archive records")
+            # start archive theread
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-            self.archive_thread = ArchiveSyncThread(self.archive_queue, self.backFilling, self.exit_event,
-                                                    self.http_pool, **self.sync_config)
+            self.archive_thread = ArchiveSyncThread(self.archive_queue, self.engine, self.config_dict,
+                                                    self.exit_event, self.http_pool, **self.sync_config)
             self.archive_thread.start()
             syslog.syslog(syslog.LOG_DEBUG, "sync archive: will sync archive records")
+
         else:
             syslog.syslog(syslog.LOG_DEBUG, "sync archive: won't sync records (archive_entity_id not configured)")
 
         # if a raw_entity_id is configured, then bind & create the thead to sync raw records
         if 'raw_entity_id' in self.sync_config:
+            # start raw thread
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            self.raw_thread = RawSyncThread(self.raw_queue, self.backFilling, self.exit_event, self.http_pool, **self.sync_config)
+            self.raw_thread = RawSyncThread(self.raw_queue, self.engine, self.config_dict,
+                                            self.exit_event, self.http_pool, **self.sync_config)
             self.raw_thread.start()
             syslog.syslog(syslog.LOG_DEBUG, "sync raw: will sync raw records")
         else:
             syslog.syslog(syslog.LOG_DEBUG, "sync raw: won't sync raw records (raw_entity_id not configured)")
-
-        while self.running:
-            if self.backfillRequest:
-                self.backfillRequest = False
-                self.backFilling = True
-                # back_fill missed records on webserver
-                self.back_fill()
-            time.sleep(60) # delays for 60 seconds
-
 
     def new_archive_record(self, event):
         if self.archive_thread.isAlive():
@@ -166,9 +143,12 @@ class SyncService(weewx.engine.StdService):
         self.exit_event.set()
         self.archive_queue.put(None)
         self.raw_queue.put(None)
+        global last_datetime_synced
+        last_datetime_synced = -1
         # join the threads
         self._join_thread(self.archive_thread)
         self._join_thread(self.raw_thread)
+        self._join_thread(self.backfill_thread)
         # close the http pool
         self.http_pool.close()
 
@@ -182,149 +162,32 @@ class SyncService(weewx.engine.StdService):
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "sync: Shut down syncing thread: %s" % thread.name)
 
-    def back_fill(self):
-        global last_datetime_synced
-        last_datetime_synced = self.fetch_latest_remote_datetime()
-        if last_datetime_synced is None:
-            num_to_sync = self.dbm.getSql("select count(*) from %s" % self.dbm.table_name)[0]
-        else:
-            num_to_sync = self.dbm.getSql("select count(*) from %s where dateTime > ?" %
-                                          self.dbm.table_name, (last_datetime_synced,))[0]
-        syslog.syslog(syslog.LOG_DEBUG, "sync archive: %d records to sync since last synced record with dateTime: %s"
-                      % (num_to_sync, weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
-        if num_to_sync > 0:
-                if self.backfill_limit is not None and self.backfill_limit != 0 \
-                        and num_to_sync[0] > self.backfill_limit:
-                    raise FatalSyncError, "sync archive: Too many to sync: %d exeeds the limit of %d" % \
-                                          (num_to_sync, self.backfill_limit)
-                syslog.syslog(syslog.LOG_DEBUG, "sync archive: back_filling %d records" % num_to_sync)
-                self.sync_all_since_datetime(last_datetime_synced)
-                syslog.syslog(syslog.LOG_DEBUG, "sync archive: done back_filling %d records" % num_to_sync)
-
-    def sync_all_since_datetime(self, datetime):
-        global last_datetime_synced
-        if datetime is None:
-            query = self.dbm.genSql("select * from %s order by dateTime asc" % self.dbm.table_name)
-        else:
-            query = self.dbm.genSql("select * from %s where dateTime > ? order by dateTime asc" %
-                                    self.dbm.table_name, (datetime,))
-        total_sent = 0
-        while True:
-            batch = []
-            for row in itertools.islice(query, self.batch_size):
-                datadict = dict(zip(self.dbm.sqlkeys, row))
-                batch.append(datadict)
-            if len(batch) > 0:
-                self.post_records(batch)
-                total_sent += len(batch)
-                last_datetime_synced = batch[len(batch)-1]['dateTime']
-                # XXX add start/end datetime to log message
-                syslog.syslog(syslog.LOG_DEBUG, "sync archive: back_filled %d records; timestamp last record: %s" %
-                              (total_sent, weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
-            else:
-                # no more to send
-                break
-            # breath a bit so as not to don't bombard the remote server
-            # also back_filling could take some time, so make sure an exit event hasn't been signaled
-            self._wait(self.batch_send_interval)
-
-    def fetch_latest_remote_datetime(self):
-        syslog.syslog(syslog.LOG_DEBUG, "sync archive: requesting latest dateTime from %s" % self.latest_url)
-        # the entity id to sync to on the remote server
-        self.entity_id = self.sync_config['archive_entity_id']
-        # the security key that will be sent along with updates to the entity
-        self.security_key = self.sync_config['archive_security_key']
-        # http://wxdev.ruskers.com/data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
-        postdata = {'entity_id': self.entity_id, 'data': 'dateTime', 'order': 'desc', 'limit': 1}
-        http_response = self.make_http_request(self.latest_url, postdata)
-        response_json = http_response.data
-        response = json.loads(response_json)
-        if len(response) is 0:
-            datetime = None
-        else:
-            datetime = response[0][0]
-        return datetime
-
-    def post_records(self, records):
-        datajson = json.dumps(records)
-        postdata = {'entity_id': self.entity_id, 'data': datajson, 'security_key': self.security_key}
-        self.make_http_request(self.update_url, postdata)
-
-    def make_http_request(self, url, postdata):
-        for count in range(self.http_max_tries):
-            try:
-                response = self.http_pool.request('POST', url, postdata)
-                if response.status == 200:
-                    return response
-                else:
-                    # from here must either set retry=True or raise a FatalSyncError
-                    syslog.syslog(syslog.LOG_ERR, "sync archive: http request failed (%s %s): %s" %
-                                  (response.status, response.reason, response.data))
-                    if response.status >= 500:
-                        # Don't retry if Duplicate entry error
-                        if response.data.find('Duplicate entry') >= 0:
-                            # continue
-                            return response
-                        else:
-                            retry = True
-                    else:
-                        message = "sync archive: Request to %s failed, server returned %s status with reason '%s'." % \
-                                  (url, response.status, response.reason)
-                        # invalid credentials
-                        if response.status == 403:
-                            message += " Do your entity security keys match?"
-                        # page not found
-                        if response.status == 404:
-                            message += " Is the url correct?"
-                        # bad request (likely an invalid setup)
-                        if response.status == 400:
-                            message += " Check your entity configuration."
-                        # lh Don't raise a FatalSyncError; we don't want to stop weewwx
-                        # Instead keep trying forever
-                        syslog.syslog(syslog.LOG_ERR, "%s" % message)
-                        self.backfillRequest = True
-                        self.backFilling = False
-                        # lh raise FatalSyncError, message
-            except (socket.error, urllib3.exceptions.MaxRetryError), e:
-                syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
-                syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
-                retry = True
-            if retry and count+1 < self.http_max_tries:
-                # wait a bit before retrying, ensuring that we exit if signaled
-                syslog.syslog(syslog.LOG_DEBUG, "sync: retrying again in %s seconds" % (self.http_retry_interval,))
-                self._wait(self.http_retry_interval)
-        else:
-            raise SyncError, "sync archive: Failed to invoke %s after %d tries" % (url, self.http_max_tries)
-
-    def _wait(self, duration):
-        if duration is not None:
-            if self.exit_event.wait(duration):
-                syslog.syslog(syslog.LOG_DEBUG, "sync: exit event signaled, aborting")
-                raise AbortAndExit
-
 
 class SyncThread(threading.Thread):
 
-    def __init__(self, queue, back_filling, exit_event, http_pool, thread_name="SyncThread", **sync_params):
+    def __init__(self, queue, engine, config_dict, exit_event, http_pool, thread_name="SyncThread", **sync_params):
         threading.Thread.__init__(self, name=thread_name)
         self.setDaemon(True)
         self.queue = queue
+        self.engine = engine
+        self.config_dict = config_dict
         self.exit_event = exit_event
         self.http_pool = http_pool
         # the base url of the remote server to sync to
         self.remote_server_url = sync_params['remote_server_url']
         # the path on the remote server of the data update api (usually won't ever change this)
-        self.update_url_path = sync_params.get('server_update_path', "updateData.php")
+        self.update_url_path = sync_params.get('server_update_path', "updateData007.php")
+        # the url that will be used to update data to on the remote server
+        self.update_url = self.remote_server_url + self.update_url_path
         # the entity_id and security_key must be set by sub-classes
         self.entity_id = None
         self.security_key = None
-        # default number of times to retry http requests before giving up
-        self.http_max_tries = 3
         # default time to wait in seconds before retrying http requests
-        self.http_retry_interval = 0
-        # the url that will be used to update data to on the remote server
-        self.update_url = self.remote_server_url + self.update_url_path
-        self.back_filling = back_filling
+        self.http_retry_interval = 60.1
+        # default number of times to retry http requests before giving up for a while
+        self.http_max_tries = 1
+        # time to wait in seconds before retrying after a failure (default: 15 minutes)
+        self.failure_retry_interval = float(sync_params.get('archive_failure_retry_interval', 90.1))
 
     def run(self):
         try:
@@ -348,48 +211,59 @@ class SyncThread(threading.Thread):
     def post_records(self, records):
         datajson = json.dumps(records)
         postdata = {'entity_id': self.entity_id, 'data': datajson, 'security_key': self.security_key}
-        self.make_http_request(self.update_url, postdata)
+        http_response = self.make_http_request(self.update_url, postdata)
+        if http_response is None:
+            return -1
+        else:
+            return http_response.status
 
     def make_http_request(self, url, postdata):
-        for count in range(self.http_max_tries):
-            try:
-                response = self.http_pool.request('POST', url, postdata)
-                if response.status == 200:
-                    return response
-                else:
-                    # from here must either set retry=True or raise a FatalSyncError
-                    syslog.syslog(syslog.LOG_ERR, "sync: http request failed (%s %s): %s" %
-                                  (response.status, response.reason, response.data))
-                    if response.status >= 500:
-                        # Don't retry if Duplicate entry error
-                        if response.data.find('Duplicate entry') >= 0:
-                            # continue
-                            return response
-                        else:
-                            retry = True
+        retry = False
+        try:
+            for count in range(self.http_max_tries):
+                try:
+                    response = self.http_pool.request('POST', url, postdata)
+                    if response.status == 200:
+                        return response
                     else:
-                        message = "sync: Request to %s failed, server returned %s status with reason '%s'." % \
-                                  (url, response.status, response.reason)
-                        # invalid credentials
-                        if response.status == 403:
-                            message += " Do your entity security keys match?"
-                        # page not found
-                        if response.status == 404:
-                            message += " Is the url correct?"
-                        # bad request (likely an invalid setup)
-                        if response.status == 400:
-                            message += " Check your entity configuration."
-                        raise FatalSyncError, message
-            except (socket.error, urllib3.exceptions.MaxRetryError), e:
-                syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
-                syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
-                retry = True
-            if retry and count+1 < self.http_max_tries:
-                # wait a bit before retrying, ensuring that we exit if signaled
-                syslog.syslog(syslog.LOG_DEBUG, "sync: retrying again in %s seconds" % (self.http_retry_interval,))
-                self._wait(self.http_retry_interval)
-        else:
-            raise SyncError, "sync: Failed to invoke %s after %d tries" % (url, self.http_max_tries)
+                        # from here must either set retry=True or raise a FatalSyncError
+                        syslog.syslog(syslog.LOG_ERR, "sync: http request failed (%s %s): %s" %
+                                      (response.status, response.reason, response.data))
+                        if response.status >= 500:
+                            # Don't retry if Duplicate entry error
+                            if response.data.find('Duplicate entry') >= 0:
+                                # continue
+                                return response
+                            else:
+                                retry = True
+                        else:
+                            message = "sync: Request to %s failed, server returned %s status with reason '%s'." % \
+                                      (url, response.status, response.reason)
+                            # invalid credentials
+                            if response.status == 403:
+                                message += " Do your entity security keys match?"
+                            # page not found
+                            if response.status == 404:
+                                message += " Is the url correct?"
+                            # bad request (likely an invalid setup)
+                            if response.status == 400:
+                                message += " Check your entity configuration."
+                            syslog.syslog(syslog.LOG_ERR, "%s" % message)
+                except (socket.error, urllib3.exceptions.MaxRetryError), e:
+                    syslog.syslog(syslog.LOG_ERR, "%s" % e)
+                    syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
+                    retry = True
+                if retry and count+1 < self.http_max_tries:
+                    # wait a bit before retrying, ensuring that we exit if signaled
+                    syslog.syslog(syslog.LOG_DEBUG, "sync: failed, retrying again in %s seconds, count=%d" %
+                                  (self.http_retry_interval, count+1))
+                    self._wait(self.http_retry_interval)
+            else:
+                raise SyncError
+        except SyncError:
+            syslog.syslog(syslog.LOG_ERR, "sync: Failed to invoke %s after %d tries, retrying in %s seconds" %
+                          (url, self.http_max_tries, self.failure_retry_interval))
+            self._wait(self.failure_retry_interval)
 
     def _wait(self, duration):
         if duration is not None:
@@ -400,16 +274,12 @@ class SyncThread(threading.Thread):
 
 class RawSyncThread(SyncThread):
 
-    def __init__(self, queue, back_filling, exit_event, http_pool, **sync_params):
-        SyncThread.__init__(self, queue, back_filling, exit_event, http_pool, "RawSyncThread", **sync_params)
+    def __init__(self, queue, engine, config_dict, exit_event, http_pool, **sync_params):
+        SyncThread.__init__(self, queue, engine, config_dict, exit_event, http_pool, "RawSyncThread", **sync_params)
         # the entity id to sync to on the remote server
         self.entity_id = sync_params['raw_entity_id']
         # the security key that will be sent along with updates to the entity
         self.security_key = sync_params['raw_security_key']
-        # time to wait in seconds before retrying http requests
-        self.http_retry_interval = float(sync_params.get('raw_http_retry_interval', self.http_retry_interval))
-        # number of times to retry http requests (default: 1)
-        self.http_max_tries = int(sync_params.get('raw_http_max_tries', 1))
 
     def _run(self):
         self.sync_queued_records()
@@ -426,7 +296,7 @@ class RawSyncThread(SyncThread):
                     syslog.syslog(syslog.LOG_DEBUG, "sync raw: exit event signaled, exiting queue loop")
                     raise AbortAndExit
                 syslog.syslog(syslog.LOG_DEBUG, "sync raw: send record %s" %
-                              weeutil.weeutil.timestamp_to_string(raw_record['dateTime']))
+                             weeutil.weeutil.timestamp_to_string(raw_record['dateTime']))
                 self.post_records(raw_record)
             except SyncError, e:
                 syslog.syslog(syslog.LOG_ERR, "sync raw: unable to sync record, skipping")
@@ -443,37 +313,15 @@ class ArchiveSyncThread(SyncThread):
     #    query for latest remote date
     #    send data since that date
     #    then load data from queue
-    def __init__(self, queue, back_filling, exit_event, http_pool, **sync_params):
-        SyncThread.__init__(self, queue, back_filling, exit_event, http_pool, "ArchiveSyncThread", **sync_params)
-
-        # the path on the remote server of the data query api (usually won't ever change this)
-        self.server_data_path = sync_params.get('server_data_path', "data.php")
+    def __init__(self, queue, engine, config_dict, exit_event, http_pool, **sync_params):
+        SyncThread.__init__(self, queue, engine, config_dict, exit_event, http_pool, "ArchiveSyncThread", **sync_params)
         # the entity id to sync to on the remote server
         self.entity_id = sync_params['archive_entity_id']
         # the security key that will be sent along with updates to the entity
         self.security_key = sync_params['archive_security_key']
-        # time to wait in seconds before retrying http requests (default: 1 minute)
-        self.http_retry_interval = float(sync_params.get('archive_http_retry_interval', 60))
-        # number of times to retry http requests before giving up for a while (default: 10)
-        self.http_max_tries = int(sync_params.get('archive_http_max_tries', 10))
-        # time to wait in seconds before retrying after a failure (defualt: 15 minutes)
-        self.failure_retry_interval = float(sync_params.get('archive_failure_retry_interval', 900))
-        # the url that will be used to query for the latest dateTime on the remote server
-        self.latest_url = self.remote_server_url + self.server_data_path
-        # the datetime of the most recently synced archive record, this is used to prevent potentially re-sendind
-        # queued records that a back_fill already sent (the queue is still populated during this process)
 
     def _run(self):
-        while True:
-            # during backFill skip queueing archive packages
-            if not self.back_filling:
-                try:
-                    self.sync_queued_records()
-                except SyncError, e:
-                    syslog.syslog(syslog.LOG_ERR, "sync archive: synchronization failed, starting over in %s seconds" %
-                                  self.failure_retry_interval)
-                    syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
-                    self._wait(self.failure_retry_interval)
+        self.sync_queued_records()
 
     def sync_queued_records(self):
         global last_datetime_synced
@@ -485,16 +333,203 @@ class ArchiveSyncThread(SyncThread):
                 if archive_record is None:
                     syslog.syslog(syslog.LOG_DEBUG, "sync archive: exit event signaled, exiting queue loop")
                     raise AbortAndExit
-                syslog.syslog(syslog.LOG_DEBUG, "sync archive: get record %s; last synced %s" %
-                              (weeutil.weeutil.timestamp_to_string(archive_record['dateTime']),
-                               weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
-                if last_datetime_synced is not None and (archive_record['dateTime'] <= last_datetime_synced):
-                    syslog.syslog(syslog.LOG_DEBUG, "sync archive: skip already synced record %s" %
-                                  weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
-                else:
-                    syslog.syslog(syslog.LOG_DEBUG, "sync archive: send record %s" %
-                                  weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
-                    self.post_records(archive_record)
+                if last_datetime_synced is not None:
+                    if last_datetime_synced > 0:
+                        syslog.syslog(syslog.LOG_DEBUG, "sync archive: get record %s; last synced %s" %
+                                      (weeutil.weeutil.timestamp_to_string(archive_record['dateTime']),
+                                       weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
+                        if last_datetime_synced is not None and (archive_record['dateTime'] <= last_datetime_synced):
+                            syslog.syslog(syslog.LOG_DEBUG, "sync archive: skip already synced record %s" %
+                                          weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
+                        else:
+                            syslog.syslog(syslog.LOG_DEBUG, "sync archive: send record %s" %
+                                          weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
+                            post_status = self.post_records(archive_record)
+                            if post_status == 200:
+                                last_datetime_synced = archive_record['dateTime']
             finally:
                 # mark the queue item as done whether it succeeded or not
                 self.queue.task_done()
+
+
+class BackfillSyncThread(SyncThread):
+
+    # has a queue used by the service to add new archive records as they arrive
+    # run
+    #    query for latest remote date
+    #    send data since that date
+    #    then load data from queue
+    def __init__(self, queue, engine, config_dict, exit_event, http_pool, **sync_params):
+        SyncThread.__init__(self, queue, engine, config_dict,
+                            exit_event, http_pool, "BackfillSyncThread", **sync_params)
+        self.config_dict = config_dict
+        self.sync_config = self.config_dict['RemoteSync']
+        # the base url of the remote server to sync to
+        self.remote_server_url = sync_params['remote_server_url']
+        # the path on the remote server of the data query api (usually won't ever change this)
+        self.server_data_path = sync_params.get('server_data_path', "data.php")
+        # the url that will be used to query for the latest dateTime on the remote server
+        self.latest_url = self.remote_server_url + self.server_data_path
+        # the entity id to sync to on the remote server
+        self.entity_id = sync_params['archive_entity_id']
+        # the security key that will be sent along with updates to the entity
+        self.security_key = sync_params['archive_security_key']
+        # time to wait in seconds before retrying http requests (default: 1 minute)
+        self.http_retry_interval = float(sync_params.get('archive_http_retry_interval', 60.2))
+        # number of times to retry http requests before giving up for a while (default: 10)
+        self.http_max_tries = int(sync_params.get('archive_http_max_tries', 1))
+        # time to wait in seconds before retrying after a failure (default: 15 minutes)
+        self.failure_retry_interval = float(sync_params.get('archive_failure_retry_interval', 90.2))
+        # the maximum number of reords to back_fill (defualt: no limit)
+        self.backfill_limit = int(sync_params.get('archive_backfill_limit', 0))
+        self.batch_size = int(sync_params.get('archive_batch_size', 300))
+        # the number of seconds to wait between sending batches (default .5 seconds)
+        self.batch_send_interval = float(sync_params.get('archive_batch_send_interval', 0.5))
+        self.engine = engine
+        # Open default database
+        self.dbm = self.engine.db_binder.get_manager()
+
+    def _run(self):
+        self.back_fill()
+
+    def back_fill(self):
+        global last_datetime_synced
+        num_to_sync = 0
+        if last_datetime_synced == 1:
+            syslog.syslog(syslog.LOG_DEBUG, "sync backfill: exit event signaled, exiting queue loop")
+            raise AbortAndExit
+        while last_datetime_synced is None:
+            last_datetime_synced = self.fetch_latest_remote_datetime()
+            syslog.syslog(syslog.LOG_DEBUG, "sync backfill: could not retrieve latest dateTime from server")
+        if last_datetime_synced is not None:
+            if last_datetime_synced == 0:
+                num_to_sync = self.dbm.getSql("select count(*) from %s" % self.dbm.table_name)[0]
+            elif last_datetime_synced > 0:
+                num_to_sync = self.dbm.getSql("select count(*) from %s where dateTime > ?" %
+                                              self.dbm.table_name, (last_datetime_synced,))[0]
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "sync backfill: %d records to sync since last synced record with dateTime: %s" %
+                          (num_to_sync, weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
+            if num_to_sync > 0:
+                if self.backfill_limit is not None and self.backfill_limit != 0 \
+                        and num_to_sync[0] > self.backfill_limit:
+                    syslog.syslog(syslog.LOG_ERR, "sync backfill: Too many to sync: %d exeeds the limit of %d" %
+                                  (num_to_sync, self.backfill_limit))
+                    raise FatalSyncError
+                syslog.syslog(syslog.LOG_DEBUG, "sync backfill: back_filling %d records" % num_to_sync)
+                self.sync_all_since_datetime(last_datetime_synced)
+                syslog.syslog(syslog.LOG_DEBUG, "sync backfill: done back_filling %d records" % num_to_sync)
+
+    def sync_all_since_datetime(self, datetime):
+        global last_datetime_synced
+        if datetime is None:
+            query = self.dbm.genSql("select * from %s order by dateTime asc" % self.dbm.table_name)
+        else:
+            query = self.dbm.genSql("select * from %s where dateTime > ? order by dateTime asc" %
+                                    self.dbm.table_name, (datetime,))
+        total_sent = 0
+        while True:
+            batch = []
+            for row in itertools.islice(query, self.batch_size):
+                datadict = dict(zip(self.dbm.sqlkeys, row))
+                batch.append(datadict)
+            if len(batch) > 0:
+                post_status = self.post_records(batch)
+                if post_status == 200:
+                    total_sent += len(batch)
+                    last_datetime_synced = batch[len(batch)-1]['dateTime']
+                    # XXX add start/end datetime to log message
+                    syslog.syslog(syslog.LOG_DEBUG, "sync backfill: back_filled %d records; timestamp last record: %s" %
+                                  (total_sent, weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
+            else:
+                # no more to send
+                break
+            # breath a bit so as not to don't bombard the remote server
+            # also back_filling could take some time, so make sure an exit event hasn't been signaled
+            self._wait(self.batch_send_interval)
+
+    def fetch_latest_remote_datetime(self):
+        syslog.syslog(syslog.LOG_DEBUG, "sync backfill: requesting latest dateTime from %s" % self.latest_url)
+        # http://wxdev.ruskers.com/data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
+        postdata = {'entity_id': self.entity_id, 'data': 'dateTime', 'order': 'desc', 'limit': 1}
+        http_response = self.make_http_request(self.latest_url, postdata)
+        if http_response is None:
+            datetime = None  # no answer from remote server
+        else:
+            response_json = http_response.data
+            response = json.loads(response_json)
+            if len(response) is 0:
+                datetime = 0
+            else:
+                datetime = json.loads(response_json)[0][0]
+        return datetime
+
+    def post_records(self, records):
+        datajson = json.dumps(records)
+        postdata = {'entity_id': self.entity_id, 'data': datajson, 'security_key': self.security_key}
+        http_response = self.make_http_request(self.update_url, postdata)
+        if http_response is None:
+            return -1
+        else:
+            return http_response.status
+
+    def make_http_request(self, url, postdata):
+        try:
+            for count in range(self.http_max_tries):
+                try:
+                    response = self.http_pool.request('POST', url, postdata)
+                    if response.status == 200:
+                        return response
+                    else:
+                        # from here must either set retry=True or raise a FatalSyncError
+                        # lh syslog.syslog(syslog.LOG_ERR, "sync backfill: http request failed (%s %s): %s" %
+                        # lh               (response.status, response.reason, response.data))
+                        if response.status >= 500:
+                            # Don't retry if Duplicate entry error
+                            if response.data.find('Duplicate entry') >= 0:
+                                # continue
+                                return response
+                            else:
+                                retry = True
+                        else:
+                            message = \
+                                "sync backfill: Request to %s failed, server returned %s status with reason '%s'" % \
+                                (url, response.status, response.reason)
+                            # invalid credentials
+                            if response.status == 403:
+                                message += " Do your entity security keys match?"
+                            # page not found
+                            if response.status == 404:
+                                message += " Is the url correct?"
+                            # bad request (likely an invalid setup)
+                            if response.status == 400:
+                                message += " Check your entity configuration."
+                            syslog.syslog(syslog.LOG_ERR, "%s" % message)
+                            raise SyncError
+                except (socket.error, urllib3.exceptions.MaxRetryError), e:
+                    syslog.syslog(syslog.LOG_ERR, "%s" % e)
+                    syslog.syslog(syslog.LOG_ERR, "sync backfill: failed http request attempt #%d to %s" %
+                                  (count+1, url))
+                    retry = True
+                if retry and count+1 < self.http_max_tries:
+                    # wait a bit before retrying, ensuring that we exit if signaled
+                    syslog.syslog(syslog.LOG_DEBUG, "sync backfill: failed, retrying again in %s seconds" %
+                                  (self.http_retry_interval,))
+                    self._wait(self.http_retry_interval)
+                elif retry and count+1 >= self.http_max_tries:
+                    # now wait failure_retry_interval
+                    syslog.syslog(syslog.LOG_DEBUG, "sync backfill: failed, retrying again in %s seconds" %
+                                  self.failure_retry_interval)
+                    self._wait(self.failure_retry_interval)
+            else:
+                raise SyncError
+        except SyncError:
+            syslog.syslog(syslog.LOG_ERR, "sync backfill: Failed to invoke %s after %d tries, retrying in %s seconds" %
+                          (url, self.http_max_tries, self.failure_retry_interval))
+            self._wait(self.failure_retry_interval)
+
+    def _wait(self, duration):
+        if duration is not None:
+            if self.exit_event.wait(duration):
+                syslog.syslog(syslog.LOG_DEBUG, "sync backfill: exit event signaled, aborting")
+                raise AbortAndExit
