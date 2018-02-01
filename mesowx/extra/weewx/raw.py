@@ -6,7 +6,7 @@ import weewx.engine
 import weewx.manager
 from weewx.engine import StdService
 
-VERSION = "0.4.2-lh"
+VERSION = "0.4.3-lh"
 
 #
 # 2015-12-28 Modified by Luc Heijst to work with weewx version 3.3.1
@@ -124,9 +124,10 @@ class RawService(StdService):
         # is processed since the LOOP packets are queued up and then returned immediately when
         # looping resumes, coupled with the fact that for Vantage Pro consoles the dateTime value is
         # added by weewx. So, for database storage, skip the duplicates until we get a new one to
-        # avoid a duplicate key error, but publish them all to redis regardless.
+        # avoid a duplicate key error.
+        # New in version 0.4.3-lh: skip loop records that occur within 2 seconds from the previous one.
         dateTime = packet['dateTime']
-        if dateTime != self.lastLoopDateTime:
+        if dateTime > (self.lastLoopDateTime + 2):
             self.dbm.addRecord(packet)
             self.lastLoopDateTime = dateTime
         if dateTime > (self.lastPrunedDateTime + prune_period):
