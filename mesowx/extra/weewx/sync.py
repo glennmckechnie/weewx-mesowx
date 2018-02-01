@@ -102,21 +102,20 @@ class SyncService(weewx.engine.StdService):
         # Last dateTime synced records on webserver
         global last_datetime_synced
         last_datetime_synced = None
-
         # Open default database
         self.dbm = self.engine.db_binder.get_manager()
-        # back_fill missed records on webserver
-        self.back_fill()
 
-        # if a archive_entity_id is configured, then bind & create the thead to sync archive records
-        if 'archive_entity_id' in self.sync_config:
+        # if a archive_entity_id is configured, then back-fill missed records and bind & create the thead to sync archive records
+        if self.entity_id <> "":
+            # back_fill missed records on webserver
+            self.back_fill()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
             self.archive_thread = ArchiveSyncThread(self.archive_queue, self.exit_event,
                                                     self.http_pool, **self.sync_config)
             self.archive_thread.start()
-            syslog.syslog(syslog.LOG_DEBUG, "sync arch: will sync archive records")
+            syslog.syslog(syslog.LOG_DEBUG, "sync archive: will sync archive records")
         else:
-            syslog.syslog(syslog.LOG_DEBUG, "sync arch: won't sync records (archive_entity_id not configured)")
+            syslog.syslog(syslog.LOG_DEBUG, "sync archive: won't sync records (archive_entity_id not configured)")
 
         # if a raw_entity_id is configured, then bind & create the thead to sync raw records
         if 'raw_entity_id' in self.sync_config:
@@ -130,10 +129,10 @@ class SyncService(weewx.engine.StdService):
     def new_archive_record(self, event):
         if self.archive_thread.isAlive():
             self.archive_queue.put(event.record)
-            syslog.syslog(syslog.LOG_DEBUG, "sync arch: put record in queue %s" %
+            syslog.syslog(syslog.LOG_DEBUG, "sync archive: put record in queue %s" %
                           weeutil.weeutil.timestamp_to_string(event.record['dateTime']))
         else:
-            syslog.syslog(syslog.LOG_ERR, "sync arch: not synching archive record (%d) due to previous error." %
+            syslog.syslog(syslog.LOG_ERR, "sync archive: not synching archive record (%d) due to previous error." %
                           event.record['dateTime'])
 
     def new_loop_packet(self, event):
@@ -180,16 +179,16 @@ class SyncService(weewx.engine.StdService):
         else:
             num_to_sync = self.dbm.getSql("select count(*) from %s where dateTime > ?" %
                                           self.dbm.table_name, (last_datetime_synced,))[0]
-        syslog.syslog(syslog.LOG_DEBUG, "sync arch: %d records to sync since last synced record with dateTime: %s"
+        syslog.syslog(syslog.LOG_DEBUG, "sync archive: %d records to sync since last synced record with dateTime: %s"
                       % (num_to_sync, weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
         if num_to_sync > 0:
                 if self.backfill_limit is not None and self.backfill_limit != 0 \
                         and num_to_sync[0] > self.backfill_limit:
-                    raise FatalSyncError, "sync arch: Too many to sync: %d exeeds the limit of %d" % \
+                    raise FatalSyncError, "sync archive: Too many to sync: %d exeeds the limit of %d" % \
                                           (num_to_sync, self.backfill_limit)
-                syslog.syslog(syslog.LOG_DEBUG, "sync arch: back_filling %d records" % num_to_sync)
+                syslog.syslog(syslog.LOG_DEBUG, "sync archive: back_filling %d records" % num_to_sync)
                 self.sync_all_since_datetime(last_datetime_synced)
-                syslog.syslog(syslog.LOG_DEBUG, "sync arch: done back_filling %d records" % num_to_sync)
+                syslog.syslog(syslog.LOG_DEBUG, "sync archive: done back_filling %d records" % num_to_sync)
 
     def sync_all_since_datetime(self, datetime):
         global last_datetime_synced
@@ -209,7 +208,7 @@ class SyncService(weewx.engine.StdService):
                 total_sent += len(batch)
                 last_datetime_synced = batch[len(batch)-1]['dateTime']
                 # XXX add start/end datetime to log message
-                syslog.syslog(syslog.LOG_DEBUG, "sync arch: back_filled %d records; timestamp last record: %s" %
+                syslog.syslog(syslog.LOG_DEBUG, "sync archive: back_filled %d records; timestamp last record: %s" %
                               (total_sent, weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
             else:
                 # no more to send
@@ -219,7 +218,7 @@ class SyncService(weewx.engine.StdService):
             self._wait(self.batch_send_interval)
 
     def fetch_latest_remote_datetime(self):
-        syslog.syslog(syslog.LOG_DEBUG, "sync arch: requesting latest dateTime from %s" % self.latest_url)
+        syslog.syslog(syslog.LOG_DEBUG, "sync archive: requesting latest dateTime from %s" % self.latest_url)
         # the entity id to sync to on the remote server
         self.entity_id = self.sync_config['archive_entity_id']
         # the security key that will be sent along with updates to the entity
@@ -248,7 +247,7 @@ class SyncService(weewx.engine.StdService):
                     return response
                 else:
                     # from here must either set retry=True or raise a FatalSyncError
-                    syslog.syslog(syslog.LOG_ERR, "sync arch: http request failed (%s %s): %s" %
+                    syslog.syslog(syslog.LOG_ERR, "sync archive: http request failed (%s %s): %s" %
                                   (response.status, response.reason, response.data))
                     if response.status >= 500:
                         # Don't retry if Duplicate entry error
@@ -258,7 +257,7 @@ class SyncService(weewx.engine.StdService):
                         else:
                             retry = True
                     else:
-                        message = "sync arch: Request to %s failed, server returned %s status with reason '%s'." % \
+                        message = "sync archive: Request to %s failed, server returned %s status with reason '%s'." % \
                                   (url, response.status, response.reason)
                         # invalid credentials
                         if response.status == 403:
@@ -279,7 +278,7 @@ class SyncService(weewx.engine.StdService):
                 syslog.syslog(syslog.LOG_DEBUG, "sync: retrying again in %s seconds" % (self.http_retry_interval,))
                 self._wait(self.http_retry_interval)
         else:
-            raise SyncError, "sync arch: Failed to invoke %s after %d tries" % (url, self.http_max_tries)
+            raise SyncError, "sync archive: Failed to invoke %s after %d tries" % (url, self.http_max_tries)
 
     def _wait(self, duration):
         if duration is not None:
@@ -459,29 +458,29 @@ class ArchiveSyncThread(SyncThread):
             try:
                 self.sync_queued_records()
             except SyncError, e:
-                syslog.syslog(syslog.LOG_ERR, "sync arch: synchronization failed, starting over in %s seconds" %
+                syslog.syslog(syslog.LOG_ERR, "sync archive: synchronization failed, starting over in %s seconds" %
                               self.failure_retry_interval)
                 syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
                 self._wait(self.failure_retry_interval)
 
     def sync_queued_records(self):
         global last_datetime_synced
-        syslog.syslog(syslog.LOG_DEBUG, "sync arch: waiting for new records")
+        syslog.syslog(syslog.LOG_DEBUG, "sync archive: waiting for new records")
         while True:
             try:
                 archive_record = self.queue.get()
                 # a value of None is a signal to exit
                 if archive_record is None:
-                    syslog.syslog(syslog.LOG_DEBUG, "sync arch: exit event signaled, exiting queue loop")
+                    syslog.syslog(syslog.LOG_DEBUG, "sync archive: exit event signaled, exiting queue loop")
                     raise AbortAndExit
-                syslog.syslog(syslog.LOG_DEBUG, "sync arch: get record %s; last synced %s" %
+                syslog.syslog(syslog.LOG_DEBUG, "sync archive: get record %s; last synced %s" %
                               (weeutil.weeutil.timestamp_to_string(archive_record['dateTime']),
                                weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
                 if last_datetime_synced is not None and (archive_record['dateTime'] <= last_datetime_synced):
-                    syslog.syslog(syslog.LOG_DEBUG, "sync arch: skip already synced record %s" %
+                    syslog.syslog(syslog.LOG_DEBUG, "sync archive: skip already synced record %s" %
                                   weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "sync arch: send record %s" %
+                    syslog.syslog(syslog.LOG_DEBUG, "sync archive: send record %s" %
                                   weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
                     self.post_records(archive_record)
             finally:
