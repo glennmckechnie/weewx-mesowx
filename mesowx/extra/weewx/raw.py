@@ -6,7 +6,7 @@ import weewx.engine
 import weewx.manager
 from weewx.engine import StdService
 
-VERSION = "0.4.1-lh"
+VERSION = "0.4.2-lh"
 
 #
 # 2015-12-28 Modified by Luc Heijst to work with weewx version 3.3.1
@@ -30,12 +30,12 @@ schema = [
     #('windGust', 'REAL'),
     #('windGustDir', 'REAL'),
     ('rainRate', 'REAL'),
-    ('rain', 'REAL'), # rain, was: dayRain
+    ('rain', 'REAL'),  # rain, was: dayRain
     ('dewpoint', 'REAL'),
     ('windchill', 'REAL'),
     ('heatindex', 'REAL'),
     #('rxCheckPercent', 'REAL'),
-    ('dayET', 'REAL'), # ET
+    ('dayET', 'REAL'),  # ET
     ('radiation', 'REAL'),
     ('UV', 'REAL'),
     ('extraTemp1', 'REAL'),
@@ -56,7 +56,7 @@ schema = [
     ('leafWet1', 'REAL'),
     ('leafWet2', 'REAL'),
     ('txBatteryStatus', 'REAL'),
-    ('consBatteryVoltage', 'REAL')]
+    ('consBatteryVoltage', 'REAL'),
     #('hail', 'REAL'),
     #('hailRate', 'REAL'),
     #('heatingTemp', 'REAL'),
@@ -66,7 +66,8 @@ schema = [
     #('windBatteryStatus', 'REAL'),
     #('rainBatteryStatus', 'REAL'),
     #('outTempBatteryStatus', 'REAL'),
-    #('inTempBatteryStatus', 'REAL')i
+    #('inTempBatteryStatus', 'REAL'),
+    ]
 
 def get_default_binding_dict():
     return {'database': 'raw_mysql',
@@ -113,7 +114,8 @@ class RawService(StdService):
                 syslog.syslog(syslog.LOG_INFO, 'raw: waiting %d seconds before retry' % retry_wait)
                 time.sleep(retry_wait)
         else:
-            raise Exception('raw: prune failed after %d attemps' % max_tries)
+            # Don't raise an exception; it's not worth stopping weewx for this
+            syslog.syslog(syslog.LOG_ERR, 'raw: prune failed after %d attemps' % max_tries)
 
     def newLoopPacket(self, event):
         packet = event.packet
