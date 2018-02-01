@@ -104,11 +104,11 @@ class SyncService(weewx.engine.StdService):
         last_datetime_synced = None
         # Open default database
         self.dbm = self.engine.db_binder.get_manager()
-        # back_fill missed records on webserver
-        self.back_fill()
 
         # if a archive_entity_id is configured, then bind & create the thead to sync archive records
         if 'archive_entity_id' in self.sync_config:
+            # back_fill missed records on webserver
+            self.back_fill()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
             self.archive_thread = ArchiveSyncThread(self.archive_queue, self.exit_event,
                                                     self.http_pool, **self.sync_config)
@@ -132,7 +132,7 @@ class SyncService(weewx.engine.StdService):
             syslog.syslog(syslog.LOG_DEBUG, "sync archive: put record in queue %s" %
                           weeutil.weeutil.timestamp_to_string(event.record['dateTime']))
         else:
-            syslog.syslog(syslog.LOG_DEBUG, "sync: not synching archive record (%d) due to previous error." %
+            syslog.syslog(syslog.LOG_ERR, "sync archive: not synching archive record (%d) due to previous error." %
                           event.record['dateTime'])
 
     def new_loop_packet(self, event):
@@ -172,20 +172,22 @@ class SyncService(weewx.engine.StdService):
                 syslog.syslog(syslog.LOG_DEBUG, "sync: Shut down syncing thread: %s" % thread.name)
 
     def back_fill(self):
-        latest_datetime = self.fetch_latest_remote_datetime()
-        if latest_datetime is None:
+        global last_datetime_synced
+        last_datetime_synced = self.fetch_latest_remote_datetime()
+        if last_datetime_synced is None:
             num_to_sync = self.dbm.getSql("select count(*) from %s" % self.dbm.table_name)[0]
         else:
             num_to_sync = self.dbm.getSql("select count(*) from %s where dateTime > ?" %
-                                          self.dbm.table_name, (latest_datetime,))[0]
+                                          self.dbm.table_name, (last_datetime_synced,))[0]
         syslog.syslog(syslog.LOG_DEBUG, "sync archive: %d records to sync since last synced record with dateTime: %s"
-                      % (num_to_sync, weeutil.weeutil.timestamp_to_string(latest_datetime)))
+                      % (num_to_sync, weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
         if num_to_sync > 0:
                 if self.backfill_limit is not None and self.backfill_limit != 0 \
                         and num_to_sync[0] > self.backfill_limit:
-                    raise Exception("Too many to sync: %d exeeds the limit of %d" % (num_to_sync, self.backfill_limit))
+                    raise FatalSyncError, "sync archive: Too many to sync: %d exeeds the limit of %d" % \
+                                          (num_to_sync, self.backfill_limit)
                 syslog.syslog(syslog.LOG_DEBUG, "sync archive: back_filling %d records" % num_to_sync)
-                self.sync_all_since_datetime(latest_datetime)
+                self.sync_all_since_datetime(last_datetime_synced)
                 syslog.syslog(syslog.LOG_DEBUG, "sync archive: done back_filling %d records" % num_to_sync)
 
     def sync_all_since_datetime(self, datetime):
@@ -245,15 +247,17 @@ class SyncService(weewx.engine.StdService):
                     return response
                 else:
                     # from here must either set retry=True or raise a FatalSyncError
-                    syslog.syslog(syslog.LOG_ERR, "sync: http request failed (%s %s): %s" %
+                    syslog.syslog(syslog.LOG_ERR, "sync archive: http request failed (%s %s): %s" %
                                   (response.status, response.reason, response.data))
                     if response.status >= 500:
-                        message = "Request to %s failed, server returned %s status with reason '%s'." % \
-                                  (url, response.status, response.reason)
-                        syslog.syslog(syslog.LOG_ERR, "sync: %s" % (message,))
-                        retry = True
+                        # Don't retry if Duplicate entry error
+                        if response.data.find('Duplicate entry') >= 0:
+                            # continue
+                            return response
+                        else:
+                            retry = True
                     else:
-                        message = "Request to %s failed, server returned %s status with reason '%s'." % \
+                        message = "sync archive: Request to %s failed, server returned %s status with reason '%s'." % \
                                   (url, response.status, response.reason)
                         # invalid credentials
                         if response.status == 403:
@@ -264,7 +268,7 @@ class SyncService(weewx.engine.StdService):
                         # bad request (likely an invalid setup)
                         if response.status == 400:
                             message += " Check your entity configuration."
-                        raise Exception(message)
+                        raise FatalSyncError, message
             except (socket.error, urllib3.exceptions.MaxRetryError), e:
                 syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
                 syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
@@ -274,7 +278,7 @@ class SyncService(weewx.engine.StdService):
                 syslog.syslog(syslog.LOG_DEBUG, "sync: retrying again in %s seconds" % (self.http_retry_interval,))
                 self._wait(self.http_retry_interval)
         else:
-            raise Exception("Failed to invoke %s after %d tries" % (url, self.http_max_tries))
+            raise SyncError, "sync archive: Failed to invoke %s after %d tries" % (url, self.http_max_tries)
 
     def _wait(self, duration):
         if duration is not None:
@@ -340,12 +344,14 @@ class SyncThread(threading.Thread):
                     syslog.syslog(syslog.LOG_ERR, "sync: http request failed (%s %s): %s" %
                                   (response.status, response.reason, response.data))
                     if response.status >= 500:
-                        message = "Request to %s failed, server returned %s status with reason '%s'." % \
-                                  (url, response.status, response.reason)
-                        syslog.syslog(syslog.LOG_ERR, "sync: %s" % (message,))
-                        retry = True
+                        # Don't retry if Duplicate entry error
+                        if response.data.find('Duplicate entry') >= 0:
+                            # continue
+                            return response
+                        else:
+                            retry = True
                     else:
-                        message = "Request to %s failed, server returned %s status with reason '%s'." % \
+                        message = "sync: Request to %s failed, server returned %s status with reason '%s'." % \
                                   (url, response.status, response.reason)
                         # invalid credentials
                         if response.status == 403:
@@ -356,7 +362,7 @@ class SyncThread(threading.Thread):
                         # bad request (likely an invalid setup)
                         if response.status == 400:
                             message += " Check your entity configuration."
-                        raise Exception(message)
+                        raise FatalSyncError, message
             except (socket.error, urllib3.exceptions.MaxRetryError), e:
                 syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
                 syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
@@ -366,7 +372,7 @@ class SyncThread(threading.Thread):
                 syslog.syslog(syslog.LOG_DEBUG, "sync: retrying again in %s seconds" % (self.http_retry_interval,))
                 self._wait(self.http_retry_interval)
         else:
-            raise Exception("Failed to invoke %s after %d tries" % (url, self.http_max_tries))
+            raise SyncError, "sync: Failed to invoke %s after %d tries" % (url, self.http_max_tries)
 
     def _wait(self, duration):
         if duration is not None:
@@ -406,8 +412,8 @@ class RawSyncThread(SyncThread):
                               weeutil.weeutil.timestamp_to_string(raw_record['dateTime']))
                 self.post_records(raw_record)
             except SyncError, e:
-                syslog.syslog(syslog.LOG_DEBUG, "sync raw: unable to sync record, skipping")
-                syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))
+                syslog.syslog(syslog.LOG_ERR, "sync raw: unable to sync record, skipping")
+                syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
             finally:
                 # mark the queue item as done whether it succeeded or not
                 self.queue.task_done()
@@ -460,12 +466,15 @@ class ArchiveSyncThread(SyncThread):
                 if archive_record is None:
                     syslog.syslog(syslog.LOG_DEBUG, "sync archive: exit event signaled, exiting queue loop")
                     raise AbortAndExit
-                syslog.syslog(syslog.LOG_DEBUG, "sync archive: send record %s" %
-                              weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
-                if last_datetime_synced is not None and archive_record['dateTime'] <= last_datetime_synced:
-                    syslog.syslog(syslog.LOG_DEBUG, "sync archive: skip sending already synced record %d" %
+                syslog.syslog(syslog.LOG_DEBUG, "sync archive: get record %s; last synced %s" %
+                              (weeutil.weeutil.timestamp_to_string(archive_record['dateTime']),
+                               weeutil.weeutil.timestamp_to_string(last_datetime_synced)))
+                if last_datetime_synced is not None and (archive_record['dateTime'] <= last_datetime_synced):
+                    syslog.syslog(syslog.LOG_DEBUG, "sync archive: skip already synced record %s" %
                                   weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
                 else:
+                    syslog.syslog(syslog.LOG_DEBUG, "sync archive: send record %s" %
+                                  weeutil.weeutil.timestamp_to_string(archive_record['dateTime']))
                     self.post_records(archive_record)
             finally:
                 # mark the queue item as done whether it succeeded or not
