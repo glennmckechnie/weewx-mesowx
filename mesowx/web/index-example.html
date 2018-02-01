@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Weather Station Data : Real-Time</title>
+
+        <link rel="stylesheet" type="text/css" href="style/mesowx.css"/>
+
+        <script type="text/javascript" src="js/lib/jquery-2.0.3.min.js"></script>
+        <script type="text/javascript" src="js/lib/d3.v3.min.js"></script>
+        <script type="text/javascript" src="js/lib/highstock.js"></script>
+        <script type="text/javascript" src="meso/js/meso.js"></script>
+        <script type="text/javascript" src="js/mesowx.js"></script>
+        <script type="text/javascript" src="meso/js/ChangeIndicatedValue.js"></script>
+        <script type="text/javascript" src="js/WindCompass.js"></script>
+        <script type="text/javascript" src="meso/js/AggregateDataProvider.js"></script>
+        <script type="text/javascript" src="meso/js/AbstractRealTimeRawDataProvider.js"></script>
+        <script type="text/javascript" src="meso/js/PollingRealTimeRawDataProvider.js"></script>
+        <script type="text/javascript" src="meso/js/StatsDataProvider.js"></script>
+        <script type="text/javascript" src="meso/js/AbstractHighstockChart.js"></script>
+        <script type="text/javascript" src="meso/js/MesoConsole.js"></script>
+        <script type="text/javascript" src="js/MesoWxConsole.js"></script>
+        <script type="text/javascript" src="js/MesoWxWindCompass.js"></script>
+        <script type="text/javascript" src="js/RawChart.js"></script>
+        <script type="text/javascript" src="js/ArchiveChart.js"></script>
+        <script type="text/javascript" src="js/RealTimeChart.js"></script>
+        <script type="text/javascript" src="js/Config.js"></script>
+        <script type="text/javascript" src="js/MesoWxApp.js"></script>
+
+        <script type="text/javascript">
+            $(function() {
+                new mesowx.MesoWxApp(mesowx.Config).start();
+            });
+        </script>
+
+    </head>
+    <body>
+        <div id="mesowx-console" class="wx-console console-vertical" id="wx-console-vertical">
+            <div class="outTemp-group reading-group">
+                <div><span class="outTemp-value reading-value"></span><span class="outTemp-unit unit-label"></span></div>
+                <div class="feels-like-container">feels like <span class="heatindex-value feels-like-value reading-value"></span><span class="windchill-value feels-like-value reading-value"></span><span class="windchill-unit unit-label"></span></div>
+                <span class="desc">temperature<span>
+            </div>
+            <div class="dewpoint-group reading-group">
+                <span class="dewpoint-value reading-value"></span><span class="dewpoint-unit unit-label"></span>
+                <span class="desc">dewpoint<span>
+            </div>
+            <div class="wind-group reading-group">
+                <!--span class="windSpeed-value reading-value"></span><span class="windSpeed-unit unit-label"></span>
+                <span class="windDir-value reading-value"></span-->
+                <div id="compass" class="compass"></div>
+                <span class="desc">wind</span>
+            </div>
+            <div class="out-hum-group reading-group">
+                <span class="outHumidity-value reading-value"></span><span class="outHumidity-unit unit-label"></span>
+                <span class="desc">humidity</span>
+            </div>
+            <div class="bar-group reading-group">
+                <span class="barometer-value reading-value"></span><span class="barometer-unit unit-label"></span>
+                <span class="desc">pressure</span>
+            </div>
+            <div class="rain-group reading-group">
+                <!--
+                    Setup Note:
+
+                    If you have a station that supplies the dayRain field (e.g. Davis) and want to display 
+                    it (along with dynamic hiding/showing of the rain rate depending on if it's raining), 
+                    simply comment out the following line and remove the comments around the commented two
+                    lines below it.
+                -->
+                <span class="rainRate-value reading-value"></span><span class="rainRate-unit unit-label"></span>
+                <!--
+                <span class="dayRain-value reading-value"></span><span class="dayRain-unit unit-label"></span> 
+                <div class="rainRate-container"><span class="rainRate-value reading-value"></span><span class="rainRate-unit unit-label"></span></div>
+                -->
+                <span class="desc">rain</span>
+            </div>
+            <div class="last-update"><span class="dateTime-value"></span></div>
+        </div>
+        <div id="charts-container"></div>
+        <div id="chart-selector">
+            <a id="real-time-selector" href="#">Real-time</a>
+            <a id="today-selector" href="#">24-hours</a>
+            <a id="archive-selector" href="#">Archive</a>
+        </div>
+    </body>
+</html>

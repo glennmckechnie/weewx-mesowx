@@ -1,0 +1,196 @@
+/*
+  core
+ */
+body {
+    margin: 0;
+    padding: 0;
+}
+#console {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+#charts-container {
+    position: absolute;
+    top: 0;
+    left: 170px;
+    right: 0px;
+    margin: 0 20px;
+    height: 600px;
+}
+/*.chart-container {
+    height: 580px;
+    min-width: 500px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}*/
+#chart-selector {
+    position: absolute;
+    top: 600px;
+    left: 190px;
+}
+
+
+/* 
+   console 
+ */
+.wx-console {
+    padding: 10px;
+    color: #616161;
+    font-family: Verdana, Geneva, sans-serif;
+}
+.console-vertical {
+    width: 170px;
+}
+.console-horizontal {
+    overflow: hidden; /* this clears the float */
+}
+.reading-group {
+    text-align: right;
+    background-color: #eee;
+    border-radius: .8em;
+    padding: .5em;
+}
+.console-vertical .reading-group {
+    margin-bottom: .4em;
+}
+.console-horizontal .reading-group {
+    margin-right: .4em;
+    float: left;
+    width: 150px;
+}
+.reading-value {
+    font-size: 1.7em;
+    font-weight: bold;
+}
+.value-up {
+    animation-duration: 2s;
+    -webkit-animation-duration: 2s;
+    animation-name: value-up;
+    -webkit-animation-name: value-up;
+}
+@keyframes value-up {
+    10% { color: #00C90D; }
+}
+@-webkit-keyframes value-up {
+    10% { color: #00C90D; }
+}
+.value-down {
+    animation-duration: 2s;
+    -webkit-animation-duration: 2s;
+    animation-name: value-down;
+    -webkit-animation-name: value-down;
+}
+@keyframes value-down {
+    75% { color: #E00000; }
+}
+@-webkit-keyframes value-down {
+    75% { color: #E00000; }
+}
+.outTemp-value {
+    font-size: 2.1em;
+    line-height: .8em;
+}
+.feels-like-container {
+    line-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all .5s ease-out;
+    -webkit-transition: all .5s ease-in-out;
+}
+.feels-like-container.active {
+    line-height: 1;
+    opacity: 1;
+}
+.feels-like-value {
+    font-size: 1em;
+}
+.rainRate-container {
+    line-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all .5s ease-out;
+    -webkit-transition: all .5s ease-in-out;
+}
+.rainRate-container.active {
+    line-height: 1;
+    opacity: 1;
+}
+.rainRate-container .rainRate-value {
+    font-size: 1.1em;
+}
+.last-update {
+    margin-top: 2em;
+    font-size: .6em;
+    font-style: italic;
+    text-align: left;
+}
+.last-update-value {
+    font-size: 1em;
+    font-weight: normal;
+}
+.desc {
+    display: block;
+    color: #adadad;
+    font-style: italic;
+    font-size: .8em;
+    margin-top: .2em;
+    text-align: left;
+    margin-left: .5em;
+    /*border-top: 1px solid #c7c7c7;*/
+}
+
+
+/* 
+  compass 
+ */
+.compass {
+}
+.compass svg {
+    font-family: Verdana, Geneva, sans-serif;
+    color: #616161;
+    fill: #616161;
+}
+.compass .edge {
+    /*fill: none;
+    stroke: #d9d9d9;
+    stroke-width: 1;*/
+    display: none;
+}
+.compass .tick {
+    stroke: #bdbdbd;
+    stroke-width: 1;
+}
+.compass .tick45 {
+    stroke-width: 2;
+}
+.compass .tick90 {
+    stroke-width: 4;
+}
+.compass .currDir {
+    stroke-width: 1;
+}
+.compass .prevDir {
+    stroke-width: 1;
+    color: #bfbfbf;
+    fill: #bfbfbf;
+}
+.compass .speedDisplay {
+    font-weight: bold;
+    font-size: 3em;
+    kerning: .03em;
+    alignment-baseline: central;
+    text-anchor: middle;
+}
+.compass .speedSuffix {
+    font-size: .3em;
+}
+.compass .ordinalDisplay {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-anchor: middle;
+    baseline-shift: 10%;
+}
+
