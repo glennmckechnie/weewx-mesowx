@@ -27,7 +27,7 @@ schema = [
     #('windGust', 'REAL'),
     #('windGustDir', 'REAL'),
     ('rainRate', 'REAL'),
-    ('dayRain', 'REAL'), # rain
+    ('rain', 'REAL'), # rain, was: dayRain
     ('dewpoint', 'REAL'),
     ('windchill', 'REAL'),
     ('heatindex', 'REAL'),
@@ -68,12 +68,13 @@ schema = [
 def get_default_binding_dict():
     return {'database': 'raw_mysql',
             'manager': 'weewx.manager.Manager',
-            'table_name': 'raw_archive',
+            'table_name': 'raw',
             'schema': 'user.raw.schema'}
 
 class RawService(StdService):
 
     def __init__(self, engine, config_dict):
+        self.config_dict = config_dict
         super(RawService, self).__init__(engine, config_dict)
         self.dataLimit = int(config_dict['Raw']['data_limit'])
         self.binding = config_dict['Raw']['raw_data_binding']  #lh
@@ -82,9 +83,9 @@ class RawService(StdService):
         dbm_dict = weewx.manager.get_manager_dict(
             config_dict['DataBindings'], config_dict['Databases'], self.binding,
             default_binding_dict=get_default_binding_dict())
-        with weewx.manager.open_manager(dbm_dict, initialize=True) as self.dbm:
+        with weewx.manager.open_manager(dbm_dict, initialize=True) as dbm:
             # ensure schema on disk matches schema in memory
-            dbcol = self.dbm.connection.columnsOf(self.dbm.table_name)
+            dbcol = dbm.connection.columnsOf(dbm.table_name)
             memcol = [x[0] for x in dbm_dict['schema']]
             if dbcol != memcol:
                 raise Exception('%s: schema mismatch: %s != %s' %
@@ -92,6 +93,7 @@ class RawService(StdService):
 
         #lh  self.setupRawDatabase(config_dict)
         self.lastLoopDateTime = 0
+        self.lastPrunedDateTime = 0
         self.redisPublishEnabled = 0
         if 'Push' in config_dict['Raw']:
             self.redisPublishEnabled = int(config_dict['Raw']['Push']['redis_enabled']) == 1
@@ -101,17 +103,25 @@ class RawService(StdService):
 
     def newLoopPacket(self, event):
         packet = event.packet
-        # It's possible for records with duplicate dateTimes - this occurs when an archive packet
-        # is processed since the LOOP packets are queued up and then returned immediately when
-        # looping resumes, coupled with the fact that for Vantage Pro consoles the dateTime value is
-        # added by weewx. So, for database storage, skip the duplicates until we get a new one to 
-        # avoid a duplicate key error, but publish them all to redis regardless.
-        dateTime = packet['dateTime']
-        if dateTime != self.lastLoopDateTime:
-            self.dbm.addRecord(packet)
-            #lh  self.rawData.addRecordAndTruncate(packet, self.dataLimit)
-            self.lastLoopDateTime = dateTime
-        self.redisPublish(packet)
+        dbm_dict = weewx.manager.get_manager_dict(
+            self.config_dict['DataBindings'], self.config_dict['Databases'], self.binding,
+            default_binding_dict=get_default_binding_dict())
+        with weewx.manager.open_manager(dbm_dict, initialize=True) as dbm:
+            # It's possible for records with duplicate dateTimes - this occurs when an archive packet
+            # is processed since the LOOP packets are queued up and then returned immediately when
+            # looping resumes, coupled with the fact that for Vantage Pro consoles the dateTime value is
+            # added by weewx. So, for database storage, skip the duplicates until we get a new one to
+            # avoid a duplicate key error, but publish them all to redis regardless.
+            dateTime = packet['dateTime']
+            if dateTime != self.lastLoopDateTime:
+                dbm.addRecord(packet)
+                #lh  self.rawData.addRecordAndTruncate(packet, self.dataLimit)
+                self.lastLoopDateTime = dateTime
+            if dateTime > self.lastPrunedDateTime - 300:
+                if self.dataLimit is not None:
+                    RawService.prune_rawdata(dbm, dateTime - (self.dataLimit * 3600))
+                self.lastPrunedDateTime = dateTime
+            self.redisPublish(packet)
 
     def jsonSerializeObject(self, obj):
         if isinstance(obj, datetime.time):
@@ -195,6 +205,24 @@ class RawService(StdService):
                 except Exception, e:
                     syslog.syslog(syslog.LOG_ERR, "Raw: unable to add raw record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
                     syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
+
+    @staticmethod
+    def prune_rawdata(dbm, ts, max_tries=3, retry_wait=10):
+        """remove rawdata older than data_limit hours from the database"""
+
+        sql = "delete from %s where dateTime < %d" % (dbm.table_name, ts)
+        for count in range(max_tries):
+            try:
+                syslog.syslog(syslog.LOG_DEBUG, 'deleting rawdata prior to %d' % ts)
+                dbm.getSql(sql)
+                syslog.syslog(syslog.LOG_INFO, 'deleted rawdata prior to %d' % ts)
+                break
+            except Exception, e:
+                syslog.syslog(syslog.LOG_ERR, 'prune failed (attempt %d of %d): %s' % ((count + 1), max_tries, e))
+                syslog.syslog(syslog.LOG_INFO, 'waiting %d seconds before retry' % retry_wait)
+                time.sleep(retry_wait)
+        else:
+            raise Exception('prune failed after %d attemps' % max_tries)
 
     # schema based on wview history table 
     # TODO finalize
