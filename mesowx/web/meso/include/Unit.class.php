@@ -122,9 +122,10 @@ class UnitConvert {
             Unit::mps => "# * 0.514444444"
         ),
         Unit::mps => array(
+        //bitbucket.org/lirpa/mesowx/issues/39/wrong-unit-conversion
             Unit::mph => "# * 2.23693629",
-            Unit::kph => "# * 1.94384449",
-            Unit::knot => "# * 3.6"
+            Unit::knot => "# * 1.94384449",
+            Unit::kph => "# * 3.6"
         ),
 
         // time
@@ -141,7 +142,7 @@ class UnitConvert {
     private static $NO_CONVERT_FUNCTION;
 
     public static function getSqlFormula($value, $fromUnit, $toUnit) {
-        if($fromUnit == $toUnit || !$toUnit) {
+        if ($fromUnit == $toUnit || !$toUnit) {
             return $value;
         }
         $formula = self::$FORMULA[$fromUnit][$toUnit];
@@ -149,15 +150,15 @@ class UnitConvert {
     }
 
     public static function getConverter($fromUnit, $toUnit) {
-        if($fromUnit == $toUnit) {
+        if ($fromUnit == $toUnit) {
             return self::getNoConvertFunction();
         }
         $functions =& self::$conversionFunctions;
-        if(!array_key_exists($fromUnit, $functions)) {
+        if (!array_key_exists($fromUnit, $functions)) {
             $functions[$fromUnit] = array();
         }
         $fromFunctions =& $functions[$fromUnit];
-        if(!array_key_exists($toUnit, $fromFunctions)) {
+        if (!array_key_exists($toUnit, $fromFunctions)) {
             $formula = self::$FORMULA[$fromUnit][$toUnit];
             $functionBody = 'return '. str_replace('#', '$v', $formula) .';';
             $fromFunctions[$toUnit] = create_function('$v', $functionBody);
@@ -171,7 +172,7 @@ class UnitConvert {
     }
 
     private static function getNoConvertFunction() {
-        if(!self::$NO_CONVERT_FUNCTION) {
+        if (!self::$NO_CONVERT_FUNCTION) {
             self::$NO_CONVERT_FUNCTION = function($v) {
                 return $v;
             };
