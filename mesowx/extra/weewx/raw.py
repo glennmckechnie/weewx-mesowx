@@ -6,16 +6,93 @@ import weedb
 import weewx
 import weeutil.weeutil
 
-from weewx.wxengine import StdService
+from weewx.engine import StdService
+
+if weewx.__version__ < "3":
+    raise weewx.UnsupportedFeature("weewx 3 is required, found %s" %
+                                   weewx.__version__)
+
+schema = [
+    ('dateTime', 'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+    ('usUnits', 'INTEGER NOT NULL'),
+    ('barometer', 'REAL'),
+    #('pressure', 'REAL'),
+    #('altimeter', 'REAL'),
+    ('inTemp', 'REAL'),
+    ('outTemp', 'REAL'),
+    ('inHumidity', 'REAL'),
+    ('outHumidity', 'REAL'),
+    ('windSpeed', 'REAL'),
+    ('windDir', 'REAL'),
+    #('windGust', 'REAL'),
+    #('windGustDir', 'REAL'),
+    ('rainRate', 'REAL'),
+    ('dayRain', 'REAL'), # rain
+    ('dewpoint', 'REAL'),
+    ('windchill', 'REAL'),
+    ('heatindex', 'REAL'),
+    #('rxCheckPercent', 'REAL'),
+    ('dayET', 'REAL'), # ET
+    ('radiation', 'REAL'),
+    ('UV', 'REAL'),
+    ('extraTemp1', 'REAL'),
+    ('extraTemp2', 'REAL'),
+    ('extraTemp3', 'REAL'),
+    ('soilTemp1', 'REAL'),
+    ('soilTemp2', 'REAL'),
+    ('soilTemp3', 'REAL'),
+    ('soilTemp4', 'REAL'),
+    ('leafTemp1', 'REAL'),
+    ('leafTemp2', 'REAL'),
+    ('extraHumid1', 'REAL'),
+    ('extraHumid2', 'REAL'),
+    ('soilMoist1', 'REAL'),
+    ('soilMoist2', 'REAL'),
+    ('soilMoist3', 'REAL'),
+    ('soilMoist4', 'REAL'),
+    ('leafWet1', 'REAL'),
+    ('leafWet2', 'REAL'),
+    ('txBatteryStatus', 'REAL'),
+    ('consBatteryVoltage', 'REAL')]
+    #('hail', 'REAL'),
+    #('hailRate', 'REAL'),
+    #('heatingTemp', 'REAL'),
+    #('heatingVoltage', 'REAL'),
+    #('supplyVoltage', 'REAL'),
+    #('referenceVoltage', 'REAL'),
+    #('windBatteryStatus', 'REAL'),
+    #('rainBatteryStatus', 'REAL'),
+    #('outTempBatteryStatus', 'REAL'),
+    #('inTempBatteryStatus', 'REAL')i
+
+def get_default_binding_dict():
+    return {'database': 'raw_mysql',
+            'manager': 'weewx.manager.Manager',
+            'table_name': 'raw_archive',
+            'schema': 'user.raw.schema'}
 
 class RawService(StdService):
 
     def __init__(self, engine, config_dict):
         super(RawService, self).__init__(engine, config_dict)
         self.dataLimit = int(config_dict['Raw']['data_limit'])
-        self.setupRawDatabase(config_dict)
-        self.lastLoopDateTime = 0;
-        self.redisPublishEnabled = 0;
+        self.binding = config_dict['Raw']['raw_data_binding']  #lh
+
+        # setup database
+        dbm_dict = weewx.manager.get_manager_dict(
+            config_dict['DataBindings'], config_dict['Databases'], self.binding,
+            default_binding_dict=get_default_binding_dict())
+        with weewx.manager.open_manager(dbm_dict, initialize=True) as self.dbm:
+            # ensure schema on disk matches schema in memory
+            dbcol = self.dbm.connection.columnsOf(self.dbm.table_name)
+            memcol = [x[0] for x in dbm_dict['schema']]
+            if dbcol != memcol:
+                raise Exception('%s: schema mismatch: %s != %s' %
+                                (self.method_id, dbcol, memcol))
+
+        #lh  self.setupRawDatabase(config_dict)
+        self.lastLoopDateTime = 0
+        self.redisPublishEnabled = 0
         if 'Push' in config_dict['Raw']:
             self.redisPublishEnabled = int(config_dict['Raw']['Push']['redis_enabled']) == 1
             self.redisChannel = config_dict['Raw']['Push']['redis_channel']
@@ -23,7 +100,7 @@ class RawService(StdService):
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
 
     def newLoopPacket(self, event):
-        packet = event.packet;
+        packet = event.packet
         # It's possible for records with duplicate dateTimes - this occurs when an archive packet
         # is processed since the LOOP packets are queued up and then returned immediately when
         # looping resumes, coupled with the fact that for Vantage Pro consoles the dateTime value is
@@ -31,7 +108,8 @@ class RawService(StdService):
         # avoid a duplicate key error, but publish them all to redis regardless.
         dateTime = packet['dateTime']
         if dateTime != self.lastLoopDateTime:
-            self.rawData.addRecordAndTruncate(packet, self.dataLimit)
+            self.dbm.addRecord(packet)
+            #lh  self.rawData.addRecordAndTruncate(packet, self.dataLimit)
             self.lastLoopDateTime = dateTime
         self.redisPublish(packet)
 
@@ -70,6 +148,53 @@ class RawService(StdService):
         port = int(push_config['redis_port'])
         syslog.syslog(syslog.LOG_INFO, "Raw: Using redis server: %s:%s " % (host, port))
         self.publisher = redis.Redis(host=host, port=port, db=0)
+
+    def _addRecord(self, record_obj):
+
+        # Determine if record_obj is just a single dictionary instance (in which
+        # case it will have method 'keys'). If so, wrap it in something iterable
+        # (a list):
+        record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
+
+        for record in record_list:
+
+            if record['dateTime'] is None:
+                syslog.syslog(syslog.LOG_ERR, "Raw: raw record with null time encountered.")
+                raise weewx.ViolatedPrecondition("Raw record with null time encountered.")
+
+            dbm_dict = weewx.manager.get_manager_dict(
+                self.config_dict['DataBindings'],
+                self.config_dict['Databases'],
+                self.binding,
+                default_binding_dict=get_default_binding_dict())
+            with weewx.manager.open_manager(dbm_dict) as dbm:
+                # Only data types that appear in the database schema can be inserted.
+                # To find them, form the intersection between the set of all record
+                # keys and the set of all sql keys
+                self.sqlkeys = dbm.connection.columnsOf(dbm.table_name)
+                record_key_set = set(record.keys())
+                insert_key_set = record_key_set.intersection(self.sqlkeys)
+                # Convert to an ordered list:
+                key_list = list(insert_key_set)
+                # Get the values in the same order:
+                value_list = [record[k] for k in key_list]
+
+                # This will a string of sql types, separated by commas. Because
+                # some of the weewx sql keys (notably 'interval') are reserved
+                # words in MySQL, put them in backquotes.
+                k_str = ','.join(["`%s`" % k for k in key_list])
+                # This will be a string with the correct number of placeholder question marks:
+                q_str = ','.join('?' * len(key_list))
+
+                # Form the SQL insert statement:
+                sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (dbm.table_name, k_str, value_list)
+                try:
+                    dbm.genSql(sql_insert_stmt)
+                    syslog.syslog(syslog.LOG_DEBUG, "Raw: sql %s list %s" % (sql_insert_stmt, value_list))
+                    syslog.syslog(syslog.LOG_DEBUG, "Raw: added raw record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
+                except Exception, e:
+                    syslog.syslog(syslog.LOG_ERR, "Raw: unable to add raw record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
+                    syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
 
     # schema based on wview history table 
     # TODO finalize
