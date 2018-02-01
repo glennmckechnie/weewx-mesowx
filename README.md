@@ -3,21 +3,19 @@
 
 This repo is a fork of MesoWx as originally implemented at https://bitbucket.org/lirpa/mesowx 
 
-It is starts with the 0.4.0 version,
-It was the latest available on the 1st February 2018 and has been copied here to enable integration with Luc's raw.py and sync.py scripts
+It starts with the 0.4.0 version which was the latest available on the 1st February 2018. It has been copied here to enable integration with Luc's raw.py and sync.py scripts
 No license was available at the time of upload but Peter Finley (MesoWx author) has indicated that it is free to distribute, specifically ...
 From https://groups.google.com/d/msg/meso-user/ebs6sOhNqsg/iNeqnVarEgAJ
 
-The extras directory now contains the updated scripts as written by Luc Heijst and were rewritten to keep pace with either the changes in weewx versions, or problems that arose and reported by weewx users.
-These same scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded as commits so viewing the commit history of the files will pinpoint those provided.
+The extras directory now contains the updated scripts as written by Luc Heijst and were rewritten to keep pace with either the changes in weewx versions, or issues that arose and were reported by weewx users.
+Some of those scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded here as individual commits so viewing the commit history of the files will show those provided. Not all commits are working versions, the latest should be okay though.
 
 The aim is to incorporate the scripts and MesoWx into a skin that is installable using wee_extension.
 This repo is not intended to replace the original Lirpa (bitbucket) repo, rather it's an opportunity to keep it (or at least MesoWx) alive
 
+The following description came directly from the MesoWx site at Lirpa, some changes have been made to suit the integration weewx.
 
-The following description comes directly from the MesoWx site at Lirpa.
-
-
+############################################
 
 # MesoWx
 
@@ -61,17 +59,18 @@ If your weather station database isn't available to your web server (remote data
 
 To create a database to house your data (remote database setup only):
 
+    mysql -uroot -p
     mysql> create database mesowx;
 
-To create a user with access to this database (replace <PASSWORD> with a password for the user):
+To create a user with access to this database (this example reuses the weewx user and password):
 
-    mysql> CREATE USER 'mesowx'@'localhost' IDENTIFIED BY '<PASSWORD>';
+    mysql> CREATE USER 'mesowx'@'localhost' IDENTIFIED BY 'mesowx';
 
-Grant access to your database (note: only needed for remote database setup):
+Grant full access to your remote database (if you are using a remote database setup, which will be with sync.py):
 
     mysql> GRANT select, update, create, delete, insert ON mesowx.* TO mesowx@localhost;
 
-Grant access to your database (note: only needed for shared database setup, replace <DATABASE> with your database name):
+Grant read only access to your local database (note: only needed for shared database setup, replace <DATABASE> with your database name. raw.py will be the script used here):
 
     mysql> GRANT select ON <DATABASE>.* TO mesowx@localhost;
 
@@ -83,8 +82,8 @@ Grant access to your database (note: only needed for shared database setup, repl
 
  # Configure Meso
 
-Meso is included in meso sub-directory within MesoWx's web directory and has it's own configuration file. An example configuration file exists in web/meso/include/ named config-example.json is stubbed for a typical Weewx integration and includes documentation explaining the various options. The actual configuration file must be named config.json and should be in the same directory. You can rename or make a copy of the example file to use as a starting point. See the comments in the example file for further instructions on how to configure Meso for MesoWx, and refer to the Meso documentation for further assistance.
-Configure MesoWx
+Meso is included in meso sub-directory within MesoWx's web directory and has it's own configuration file. An example configuration file exists in web/meso/include/ named config-example.json. It is stubbed for a typical Weewx integration and includes documentation explaining the various options. The actual configuration file must be named config.json and should be in the same directory. You can rename or make a copy of the example file to use as a starting point. See the comments in the example file for further instructions on how to configure Meso for MesoWx, and refer to the Meso documentation for further assistance.
+# Configure MesoWx
 
 An example MesoWx configuration is defined in /web/js/Config-example.js. The actual configuration file must be named Config.js and live in the same directly. You can rename or make a copy of this file to use as a starting point. See the comments in the example file for further explainations of the various configuration options.
 
@@ -93,40 +92,42 @@ Next, either rename or make a copy of the /web/index-example.html and call it in
 
 # Weewx Plugins
 
-# The Following is definitely a work in progress - treat with caution feb 2018 #
+# What follows is definitely a work in progress - treat with caution feb 2018 #
 
-The following notes are taken from [Lucs instructions on weewx-user](https://groups.google.com/d/msg/weewx-user/eAUsTqR8yYQ/UVMxAAtgAAAJ) for the raw script
+The following notes are taken from [Lucs instructions on weewx-user](https://groups.google.com/d/msg/weewx-user/eAUsTqR8yYQ/UVMxAAtgAAAJ) for the raw.py script
 
-[sync plugin](https://groups.google.com/d/msg/weewx-user/DnaWsMpC9vE/RfcC5KwQAgAJ)
+The [sync plugin](https://groups.google.com/d/msg/weewx-user/DnaWsMpC9vE/RfcC5KwQAgAJ) notes for later inclusion.
 
+# Raw
 
-- The raw section should now read as follows
+## For weewx
+Edit weewx.conf 
+The addition of a raw section which will read as follows
 
+    ##############################################################################
 
-##############################################################################
+    [Raw]
 
-[Raw]
-
-    #
-    # This section is for configuration of the raw plugin. This plugin stores the raw
-    # data off of the station.
-    #
-    # The database binding to persist the raw data. 
-    # This should match a section under the [DataBindings] section.
-    data_binding = raw_binding
-    #
-    # The max amount of raw data to retain specified in hours (set to None to retain all data)
-    # This will in effect keep a rolling window of the data removing old data based on 
-    # the time of the most recent record. It is recommended to set this to at least 24.
-    #
-    # NOTE: if increasing this value (or use None to keep forever), 
-    # keep in mind that raw data may consume VERY large amounts of space!
-    data_limit = 24
+        #
+        # This section is for configuration of the raw plugin. This plugin stores the raw
+        # data off of the station.
+        #
+        # The database binding to persist the raw data. 
+        # This should match a section under the [DataBindings] section.
+        data_binding = raw_binding
+        #
+        # The max amount of raw data to retain specified in hours (set to None to retain all data)
+        # This will in effect keep a rolling window of the data removing old data based on 
+        # the time of the most recent record. It is recommended to set this to at least 24.
+        #
+        # NOTE: if increasing this value (or use None to keep forever), 
+        # keep in mind that raw data may consume VERY large amounts of space!
+        data_limit = 24
     
-##############################################################################  
+    ##############################################################################  
 
 
-Add a section [[raw_binding]] to the [DataBindings section]
+Add a section [[raw_binding]] to the [DataBindings] section
 
 
     [DataBindings]  
@@ -136,13 +137,14 @@ Add a section [[raw_binding]] to the [DataBindings section]
             manager = weewx.manager.Manager
             schema = user.raw.schema
 
-Add a section [[raw_mysql]] to the [Databases section]
-
+Add a section [[raw_mysql]] to the [Databases] section
         
     [Databases]        
         [[raw_mysql]]
             database_type = MySQL
             database_name = meso
+
+## For mesowx
 
 Edit [your local webserver directory]/web/meso/include/Config.json
 
@@ -294,7 +296,7 @@ when target_unit = METRIC:
 
 Start weewx
 
-Release notes raw_0.4.2-lh:
+### Release notes raw_0.4.2-lh:
 1. No longer raise exception when prune fails
 2. To retain all raw data: set data_limit to None (data_limit = None)
 
@@ -323,8 +325,7 @@ Release notes raw_0.4.2-lh:
 
 
 ================================================================================================================================
-
-Note: if you're not integrating with Weewx, this section can be skipped.
+What follows are the original descriptions and instructions from Lirpa
 
 
 Included with MesoWx are several plugins/extensions for Weewx that help provide the weather station data for use by MesoWx:
