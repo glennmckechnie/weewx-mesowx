@@ -52,8 +52,9 @@ class AbortAndExit(Exception):
 #     3) unknown/unexpected error (500 status)
 #   all errors are possible when initially setting it up, but only #1 and possibly #3 should occur 
 #     after that, thus always fail for #2, and retry for #1 and #3
-#   
+#
 # TODO rename to meso sync as this is not general purpose
+# 09-02-2018     supply a user agent string to satisfy hosting servers
 
 
 class SyncService(weewx.engine.StdService):
@@ -70,11 +71,15 @@ class SyncService(weewx.engine.StdService):
         # keeps track of the dateTime of the last loop packet seen in order to prevent sending 
         # packets with the same dateTime value, see new_loop_packet() for more info
         self.lastLoopDateTime = 0
+        # supply a user agent string to satisfy hosting servers
+        self.u_agent= ({'User-Agent':'Python-urllib/3.0'})
         # using a http connection pool to potentially save some overhead and server
         # burden if keep alive is enabled, maxsize is set to 2 since there are two threads
-        # using the pool. Note that keep alive will need to be longer than the loop interval 
+        # using the pool. Note that keep alive will need to be longer than the loop interval
         # to be effective (which may not make sense for longer intervals)
-        self.http_pool = urllib3.connectionpool.connection_from_url(self.sync_config['remote_server_url'], maxsize=2)
+        self.http_pool = urllib3.connectionpool.connection_from_url(self.sync_config['remote_server_url'], maxsize=2, headers=self.u_agent)
+
+
         # the maximum number of reords to back_fill (defualt: no limit)
         self.backfill_limit = int(self.sync_config.get('archive_backfill_limit', 0))
         # the max number of records to send in a request (default: 200)
