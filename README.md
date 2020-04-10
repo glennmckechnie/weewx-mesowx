@@ -324,9 +324,85 @@ Start weewx
 
 
 
-================================================================================================================================
-What follows are the original descriptions and instructions from Lirpa
+# Lirpa notes 
+What follows are the original descriptions and instructions from Lirpa : https://bitbucket.org/lirpa/mesowx/src/default/
 
+## MesoWx
+
+MesoWx is a real-time HTML front-end for visualizing personal weather station data. It provides a real-time graph and console display, and dynamic graphs of your weather station history allowing you to explore the details of any recorded time period in your data.
+
+MesoWx displays data from a database and does not itself iterface with any weather station hardware directly, however, being built upon Meso it supports an HTTP API for remotely adding data, which allows integration with existing weather station software. Currently, MesoWx integrates well with Weewx and should support any weather station that it supports. Included with MesoWx are several extensions for Weewx to integrate with MesoWx. Integrations with other weather station software is possible, but must be implemented. Or, depending upon your setup, you can simply configure Meso to access existing database tables containing your data.
+
+Please join the meso-user forum to keep up on releases, get assistance, make suggestions, etc.
+
+### Limitations
+
+    A modern web browser is required for the out of the box front-end (Chrome, Firefox, Safari, IE10+)
+    Extremely large archive databases likely won't perform very well at the moment (my archive database contains 350,000+ records and has performed adequately), especially on a low power server
+
+### Warnings
+
+This software is in early stages of development and as such the code, configurations, and APIs are subject to drastic changes between versions. Because of this, it's recommended to do a fresh install instead of attempting to upgrade to a newer version until version 1.0 is released (which is a long way off :).
+
+### Installation Guide
+
+There are two primary ways that MesoWx can be setup. The configuration needed revolves around where your weather station database resides:
+
+    Shared database
+        To be able to use this setup your web server must be able to access your weather station database, or you have done your own database synchronization using some other process
+    Remote database
+        In this setup, your web server has no access to your weather station database, so remote integration and data synchronization is necessary.
+        For this setup, we'll assume that you'll be leveraging the HTTP APIs provided by Meso to synchronize your data to a local database.
+
+These instructions will help guide the configuration for your needs. Please determine your desired/necessary setup path and note the specific instructions for each below. The initial setup is all about getting your data accessible for consumption by MesoWx.
+
+#### Install Prerequisites
+
+MesoWx requires a web server with PHP and a database. You must first install the following:
+
+    A web server that supports PHP (e.g. Apache HTTP server, Nginx)
+    PHP 5.4+ w/MySQL PDO (PDO is typically installed by default) and JSON
+    MySQL 5+ (For remote database setup only)
+
+How to install and manage these is outside the scope of these instructions.
+
+#### Database Setup
+
+If your weather station database isn't available to your web server (remote database setup), you'll need to setup a database that it can access and where you will synchronize your remote data. If you web server can access your weather station database, you may still want to create a separate database user for MesoWx to access your database.
+
+To create a database to house your data (remote database setup only):
+
+ mysql> create database mesowx;
+
+To create a user with access to this database (replace <PASSWORD> with a password for the user):
+
+ mysql> CREATE USER 'mesowx'@'localhost' IDENTIFIED BY '<PASSWORD>';
+
+Grant access to your database (note: only needed for remote database setup):
+
+ mysql> GRANT select, update, create, delete, insert ON mesowx.* TO mesowx@localhost;
+
+Grant access to your database (note: only needed for shared database setup, replace <DATABASE> with your database name):
+
+ mysql> GRANT select ON <DATABASE>.* TO mesowx@localhost;
+
+#### Install MesoWx
+
+    Expose the web folder via your web server
+    Once done, you can test by trying to access /js/Config-example.js in a browser.
+    Also make sure that the /meso/include/.htaccess file is being applied by trying to access the configuration file /meso/include/config-example.json in a browser. If not using Apache, use a similar means to prevent access to the files in the include folder. This is extremely important for protecting your configuration file which includes your database credentials.
+
+#### Configure Meso
+
+Meso is included in meso sub-directory within MesoWx's web directory and has it's own configuration file. An example configuration file exists in web/meso/include/ named config-example.json is stubbed for a typical Weewx integration and includes documentation explaining the various options. The actual configuration file must be named config.json and should be in the same directory. You can rename or make a copy of the example file to use as a starting point. See the comments in the example file for further instructions on how to configure Meso for MesoWx, and refer to the Meso documentation for further assistance.
+
+#### Configure MesoWx
+
+An example MesoWx configuration is defined in /web/js/Config-example.js. The actual configuration file must be named Config.js and live in the same directly. You can rename or make a copy of this file to use as a starting point. See the comments in the example file for further explainations of the various configuration options.
+
+Next, either rename or make a copy of the /web/index-example.html and call it index.html. This file contains the HTML markup and core containers for the user interface and can be customized, if desired, but knowledge of HTML and CSS is necessary. See the comments in the file for some easy tweaks that could be made depending on your weather station. If you're wanting to customize the CSS style, it's recommended to create a new CSS file rather than editing mesowx.css, so that future updates don't overwrite your changes.
+
+#### Weewx Plugins
 
 Included with MesoWx are several plugins/extensions for Weewx that help provide the weather station data for use by MesoWx:
 
@@ -337,7 +413,8 @@ Included with MesoWx are several plugins/extensions for Weewx that help provide 
 Usually either the raw or sync plugins will be installed depending on your setup; both plugins don't need to be run, but they can be, if desired. The retain plugin is intended to be used in conjuction with the other two plugins.
 
 See the instructions below for how to install and configure these plugins.
-Weewx Raw/LOOP Data Plugin (raw.py)
+
+#### Weewx Raw/LOOP Data Plugin (raw.py)
 
     Stop Weewx
     Copy the extra/plugins/weewx/raw.py file into $WEEWX_HOME/bin/user/
@@ -381,7 +458,7 @@ Weewx Raw/LOOP Data Plugin (raw.py)
         Specify the configuration for your archive and raw databases as configured in Weewx
             Note that if you are using a different database user that you may need to update the grants of the user to access the new raw table.
 
-Weewx Remote Synchronization Plugin (sync.py)
+#### Weewx Remote Synchronization Plugin (sync.py)
 
 MesoWx also provides a solution to synchronize both the archive and raw/LOOP data directly to MesoWx via a Meso's HTTP-based API. This allows Weewx to be run on a completely separate server and network from your web server, and stil allow you to view your data through MesoWx with near real-time updates. All it requires is the ability to connect to the internet. To install this Weewx plugin:
 
@@ -424,7 +501,7 @@ MesoWx also provides a solution to synchronize both the archive and raw/LOOP dat
     Restart Weewx
         Check syslog for errors if it doesn't start up (see the Troubleshooting section below)
 
-Weewx Retain Raw/LOOP Values Plugin (retain.py)
+#### Weewx Retain Raw/LOOP Values Plugin (retain.py)
 
     Stop Weewx
     Copy the extra/plugins/weewx/retain.py file into $WEEWX_HOME/bin/user/
@@ -453,13 +530,14 @@ Weewx Retain Raw/LOOP Values Plugin (retain.py)
     Restart Weewx
         Check syslog for errors if it doesn't start up (see the Troubleshooting section below)
 
-Testing
+#### Testing
 
 At this point it should now be possible to view your weather station data in MesoWx in your browser by visiting your site. If all is successful you should see a the current readings of your station console that should be updating regularly (in close to real-time) and a (likely sparsely populated) graph of your data (it will take time to fully populate). View the 'Real-time' chart (the links below the chart) and see the chart dynamically update as the time progresses. View the 'Archive' chart and see your archive data (if you are using the remote sync plugin, it will take some time to synchronize all of your data, but over time it should fill up). See the troubleshooting section below if any issues are encoutnered.
-Upgrading
+#### Upgrading
 
 As mentioned in the warning, upgrading is not supported at this time as the project take shape and works toward a more stable 1.0 release. Until then it's recommended to completely re-install newer versions.
-Troubleshooting
+
+#### Troubleshooting
 
 Check your web server/PHP logs for errors. Make sure that logging is enabled in your php.ini. To confirm, check your php.ini for the following diretives:
 
