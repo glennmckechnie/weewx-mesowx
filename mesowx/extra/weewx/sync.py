@@ -72,7 +72,7 @@ class SyncService(weewx.engine.StdService):
         # packets with the same dateTime value, see new_loop_packet() for more info
         self.lastLoopDateTime = 0
         # supply a user agent string to satisfy hosting servers
-        self.u_agent= ({'User-Agent':'Python-urllib/3.0'})
+        self.u_agent= ({'User-Agent':'MesoWX-sync/0.10 (https://github.com/glennmckechnie/weewx-mesowx)'})
         # using a http connection pool to potentially save some overhead and server
         # burden if keep alive is enabled, maxsize is set to 2 since there are two threads
         # using the pool. Note that keep alive will need to be longer than the loop interval
