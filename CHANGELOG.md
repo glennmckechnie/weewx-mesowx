@@ -1,5 +1,16 @@
 # MesoWx Change Log #
 
+## 0.5.0 (2020-06-14) ##
+
+### Simplify / Automate the install
+* Combine the 3 scripts into the one - mesowx.py
+* Works with weewx4 and python 3, also with python2.7
+* Use the wee_extension installer to perform a (mostly) hands off install of the local setup,
+    and minimize interaction required for the remote install.
+* Adjust the script, add tmpl's, use randompassword generator for security key insertion.
+* Remote install works with archive and raw, Local works with raw database and weewx database,
+    RetainLoopValues remains untested.
+
 ## 0.4.0 (2014-05-09) ##
 
 ### Features

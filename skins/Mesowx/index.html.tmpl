@@ -1,8 +1,15 @@
+## Copyright 2009-2018 Tom Keffer
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+##
+## Specifying an encoding of UTF-8 is usually safe:
+#encoding UTF-8
+##
 <!doctype html>
-<html>
+<html lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <title>Weather Station Data : Real-Time</title>
+        <title>$station.location : Real-Time</title>
 
         <link rel="stylesheet" type="text/css" href="style/mesowx.css"/>
 
@@ -28,9 +35,9 @@
         <script type="text/javascript" src="js/MesoWxApp.js"></script>
 
         <script type="text/javascript">
-            $(function() {
-                new mesowx.MesoWxApp(mesowx.Config).start();
-            });
+        #raw
+            $(function() {new mesowx.MesoWxApp(mesowx.Config).start();});
+        #end raw
         </script>
 
     </head>
@@ -77,6 +84,7 @@
             </div>
             <div class="last-update"><span class="dateTime-value"></span></div>
         </div>
+        <a href="README.html">README</a>
         <div id="charts-container"></div>
         <div id="chart-selector">
             <a id="real-time-selector" href="#">Real-time</a>

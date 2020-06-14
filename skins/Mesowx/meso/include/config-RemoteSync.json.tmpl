@@ -1,0 +1,150 @@
+## Copyright 2009-2018 Tom Keffer
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+##
+## Specifying an encoding of UTF-8 is usually safe:
+#encoding UTF-8
+##
+{
+    /*
+     * Define your database connection(s). Multiple can be defined separated by a comman.
+     * The key is the data source ID  and is used to reference the it elsewhere in the config. The
+     * ID must be unique. Each data source must define a 'type' property; the only supported type
+     * currently is 'mysql'. The rest of the properties required depend on the type
+     * (see examples below).
+     * [DatabaseTypes], [[MySQL]], host = localhost, user = weewx, password = weewx
+     */
+    "dataSource" : { //This is the database that the mesowx display will use
+        "weewx_mysql" : { // the data source ID
+            "type" : "mysql",
+            "host" : "$mesowx_host",
+            "user" : "$mesowx_user",
+            "password" : "$mesowx_pass",
+            "database" : "$mesowx_data"
+        }
+    },
+    /*
+     * Define your data entities. Entities are effectively database tables containing columns
+     * of your data. The key is the ID of the entity which is used to reference the entity in
+     * the HTTP API. Each entity must define a 'type' property; the only supported type is
+     * currently 'table' (see examples below).
+     */
+    "entity" : {
+        // This entity definition is for a typical Weewx archive table.
+        "$weewx_archive" : { // from the tuple [Mesowx][[RemoteSync]]archive_entity_id in weewx.conf
+            // the entity type
+            "type" : "table",
+            // the dataSource value should be the ID of a data source defined above in the dataSource section
+            "dataSource" : "weewx_mysql",
+            // the database table name -- table_name = archive
+            "tableName" : "archive",
+            // section for access control configuration
+            "accessControl" : {
+                // for allowing remote updating of data
+                "update" : {
+                    // set 'allow' to true to allow this entity's data to be updated
+                    "allow" : true,
+                    // the securityKey that must be sent along with each request to update
+                    // it's recommended to generate a random key, i.e.
+                    // http://www.random.org/strings/?num=1&len=20&digits=on&upperalpha=on&loweralpha=on&unique=on&format=html&rnd=new
+                    // An empty key is not allowed.
+                    "securityKey" : "$arch_sec_key"
+                }
+            },
+            // The table columns to expose and their definitions. Only the columns listed here
+            // will be available to retrieve or update. If updating this entity through the API then all
+            // not-null columns that aren't defaulted must be listed. The key is the column name
+            // as defined on the table. The value contains the properties of the column. Each column
+            // must have a 'type' property, however, currently the only supported type is "number",
+            // which is the default. Specifying a 'unit' is optional. List of supported units
+            // is defined in 'include/Unit.class.php'.
+            //
+            // Note: it's not currently not possible to define custom units/unit conversions, but
+            //       this feature is planned for a future release.
+            //
+            "columns" : {
+                "dateTime" :    {"type" : "number", "unit" : "s"},
+                "interval" :    {},
+                "barometer" :   {"unit" : "hPa"},
+                "inTemp" :      {"unit" : "c"},
+                "outTemp" :     {"unit" : "c"},
+                "inHumidity" :  {"unit" : "perc"},
+                "outHumidity" : {"unit" : "perc"},
+                "windSpeed" :   {"unit" : "kph"},
+                "windDir" :     {"unit" : "deg"},
+                "windGust" :    {"unit" : "kph"},
+                "windGustDir" : {"unit" : "deg"},
+                "rainRate" :    {"unit" : "mmHr"},
+                "rain" :        {"unit" : "mm"},
+                "dewpoint" :    {"unit" : "c"},
+                "windchill" :   {"unit" : "c"},
+                "heatindex" :   {"unit" : "c"}
+            },
+            // constraints on the data, only primaryKey is supported currently
+            "constraints" : {
+                // The primary key column of the table. Currently only a single column key is
+                // supported and this column must also be a date time value stored as seconds/ms
+                // since epoch.
+                "primaryKey" : "dateTime"
+            }
+        },
+        // This example shows a configuration with a retention policy
+        "$weewx_raw" : {
+            "type" : "table",
+            "dataSource" : "weewx_mysql",
+            "tableName" : "$mesowx_table",
+            "accessControl" : {
+                "update" : {
+                    "allow" : true,
+                    "securityKey" : "$raw_sec_key"
+                }
+            },
+            // The retention policy defines how this data is retained over time. It is only really
+            // revevant when allowing this entity to be updated. Curently the only supported
+            // policy type is "window" which will retain data within the specified time window.
+            "retentionPolicy" : {
+                "type" : "window",
+                // The trigger defines when the policy is applied. Currently only "update" is
+                // supported, which means each time the entity is updated.
+                "trigger" : "update",
+                // The amount of time in seconds since the current date/time to retain. All records
+                // before this time window will be permanently deleted!
+                "windowSize" : 86400 // 24 hours
+            },
+            "columns" : {
+                "dateTime" :    {"unit" : "s"},
+                "barometer" :   {"unit" : "hPa"},
+                "inTemp" :      {"unit" : "c"},
+                "outTemp" :     {"unit" : "c"},
+                "inHumidity" :  {"unit" : "perc"},
+                "outHumidity" : {"unit" : "perc"},
+                "windSpeed" :   {"unit" : "kph"},
+                "windDir" :     {"unit" : "deg"},
+                "rainRate" :    {"unit" : "mmHr"},
+                "dayRain" :     {"unit" : "mm"},
+                "dewpoint" :    {"unit" : "c"},
+                "windchill" :   {"unit" : "c"},
+                "heatindex" :   {"unit" : "c"}
+            },
+            "constraints" : {
+                "primaryKey" : "dateTime"
+            }
+        }
+    }
+}
+// Imperial units from original setup
+//
+//              "barometer" :   {"unit" : "inHg"},
+//              "inTemp" :      {"unit" : "f"},
+//              "outTemp" :     {"unit" : "f"},
+//              "inHumidity" :  {"unit" : "perc"},
+//              "outHumidity" : {"unit" : "perc"},
+//              "windSpeed" :   {"unit" : "mph"},
+//              "windDir" :     {"unit" : "deg"},
+//              "windGust" :    {"unit" : "mph"},
+//              "windGustDir" : {"unit" : "deg"},
+//              "rainRate" :    {"unit" : "inHr"},
+//              "rain" :        {"unit" : "in"},
+//              "dewpoint" :    {"unit" : "f"},
+//              "windchill" :   {"unit" : "f"},
+//              "heatindex" :   {"unit" : "f"}
