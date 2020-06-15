@@ -107,5 +107,7 @@ class MesowxInstaller(ExtensionInstaller):
                     'skins/Mesowx/meso/js/StatsDataProvider.js',
                     'skins/Mesowx/style/mesowx.css',
                     'skins/Mesowx/README.html',
+                    'skins/Mesowx/footnote.inc',
+                    'skins/Mesowx/links.inc',
                     'skins/Mesowx/index.html.tmpl'])]
             )
