@@ -1,5 +1,18 @@
 # MesoWx Change Log #
 
+## 0.5.2 (2020-06-15) ##
+
+* Add loop_polling_interval to [Mesowx] section. Default is 60 seconds (converts to
+    60000 milliseconds for insertion into Config.js) This sets the refresh rate of the
+    dashboard (right hand panel on index.html)
+
+    From Config.js
+    // the polling interval in milliseconds for the raw real-time data provider
+    // this controls how frequently to fetch new data, it should be·
+    // set to the frequency that your station generates "LOOP" packets
+    Config.realTimePollingInterval = 60000;
+* Tidy up / finish unit and format auto configurations from v0.5.1
+
 ## 0.5.1 (2020-06-15) ##
 
 * Auto set units according to the configuration found in weewx.conf - US, METRICWX or METRIC

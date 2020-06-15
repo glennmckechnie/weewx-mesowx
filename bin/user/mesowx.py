@@ -41,7 +41,7 @@ from weewx.engine import StdService
 from weewx.cheetahgenerator import SearchList
 import weeutil.weeutil
 
-VERSION = "0.5.1"
+VERSION = "0.5.2"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -1138,6 +1138,15 @@ class Mesowx(SearchList):
         self.mesowx_version = VERSION
         loginf('Version is %s' % (self.mesowx_version))
 
+        self.mesowx_dbase = self.generator.config_dict[
+                            'DataBindings'][
+                            'mesowx_binding'].get('database', 'mesowx_mysql')
+        self.mesowx_data = self.generator.config_dict[
+                           'Databases'][
+                           'mesowx_mysql'].get('database_name', 'mesowx')
+        self.mesowx_table = self.generator.config_dict[
+                           'Databases']['mesowx_mysql'].get('table_name',
+                                                            'raw')
         self.weewx_conf = self.generator.config_dict['DatabaseTypes']['MySQL']
         self.weewx_host = self.weewx_conf.get('host', 'localhost')
         self.weewx_user = self.weewx_conf.get('user', 'weewx')
@@ -1153,40 +1162,42 @@ class Mesowx(SearchList):
         self.mesowx_host = self.sync_config.get('mesowx_host', 'localhost')
         self.mesowx_user = self.sync_config.get('mesowx_user', 'mesowx')
         self.mesowx_pass = self.sync_config.get('mesowx_pass', 'weewx')
-        self.mesowx_dbase = self.generator.config_dict[
-                            'DataBindings'][
-                            'mesowx_binding'].get('database', 'mesowx_mysql')
-        self.mesowx_data = self.generator.config_dict[
-                           'Databases'][
-                           'mesowx_mysql'].get('database_name', 'mesowx')
-        self.mesowx_table = self.generator.config_dict[
-                          'Databases']['mesowx_mysql'].get('table_name',
-                                                           'raw')
-
+        # polling interval: time between loop packets in seconds (for dash
+        # refresh rate)
+        self.poll_ms = int(self.generator.config_dict['Mesowx'].get(
+                       'loop_polling_interval', '60')) * 1000
         wee_units = self.generator.config_dict['StdConvert'].get(
                          'target_unit', 'METRICWX')
+
+        # single digit entries (p_f, m_f) are decimal place format instructions
         if 'US' in wee_units:
             self.degr = 'f'
             self.press = 'inHg'
+            self.p_f = '3'
             self.meas = 'in'
+            self.m_f = '2'
             self.speed = 'mph'
             self.rainR = 'inHr'
         elif 'METRICWX' in wee_units:
             self.degr = 'c'
             self.press = 'hPa'
+            self.p_f = '1'
             self.meas = 'mm'
+            self.m_f = '1'
             self.speed = 'mps'
             self.rainR = 'mmHr'
-        else:  # must be METRIC !
+        else:  # it must be METRIC !
             self.degr = 'c'
             self.press = 'hPa'
+            self.p_f = '1'
             self.meas = 'cm'
+            self.m_f = '1'
             self.speed = 'kph'
             self.rainR = 'cmHr'
 
         # the wee_extension install process will create 2 unique keys and add
-        # them to weewx.conf. Change them if you like but the warranty goes
-        # with it :)
+        # them to weewx.conf. Change them if you like but the psuedo warranty
+        # goes with it :)
         self.arch_sec_key = self.sync_config.get('archive_security_key', "")
         self.raw_sec_key = self.sync_config.get('raw_security_key', "")
 
