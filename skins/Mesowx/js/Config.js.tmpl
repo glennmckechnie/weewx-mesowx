@@ -14,7 +14,7 @@ mesowx.Config = (function() {
     Config.archiveEntityId = '$weewx_archive';
 
     // the polling interval in milliseconds for the raw real-time data provider
-    // this controls how frequently to fetch new data, it should be 
+    // this controls how frequently to fetch new data, it should be
     // set to the frequency that your station generates "LOOP" packets
     Config.realTimePollingInterval = $poll_ms;
 
@@ -104,7 +104,7 @@ mesowx.Config = (function() {
 
 
     // function to use for determining direction labels
-    Config.defaultDegreeToCardinalTextConverter = 
+    Config.defaultDegreeToCardinalTextConverter =
             mesowx.Util.createDegreeToCardinalTextConverter(Config.windDirOrdinalText);
 
     // defaults for chart components (axes, series definitions, chart options, etc)
@@ -125,7 +125,7 @@ mesowx.Config = (function() {
     // Refer to http://api.highcharts.com/highstock#yAxis for highStockAxisOptions parameters
     Config.chartDefaults.yAxes = {
         // temp axis
-        "temp" : { 
+        "temp" : {
             axisId : "tempAxis",
             unit : Config.fieldDefaults.outTemp.unit,
             highstockAxisOptions : {
@@ -170,7 +170,7 @@ mesowx.Config = (function() {
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
                 min: 0,
-                maxPadding: 0 
+                maxPadding: 0
             },
         },
         // wind dir axis
@@ -392,7 +392,7 @@ mesowx.Config = (function() {
         }
     };
 
-    // RawChart configuraion
+    // RawChart configuration
     // Displays "raw"/LOOP data.
     Config.rawChartOptions = {
         aggregateDataProvider : Config.rawDataProvider,
@@ -434,7 +434,7 @@ mesowx.Config = (function() {
         // see http://api.highcharts.com/highstock
         highstockChartOptions : {
             chart : {
-                renderTo: 'charts-container', 
+                renderTo: 'charts-container',
             },
             legend : {
                 enabled: true,
@@ -473,7 +473,7 @@ mesowx.Config = (function() {
         }
     };
 
-    // RealTimeChart configuraion
+    // RealTimeChart configuration
     // Displays "raw"/LOOP data updated in real-time.
     Config.realTimeChartOptions = {
         aggregateDataProvider : Config.rawDataProvider,
@@ -511,7 +511,7 @@ mesowx.Config = (function() {
         // see http://api.highcharts.com/highstock
         highstockChartOptions : {
             chart : {
-                renderTo: 'charts-container', 
+                renderTo: 'charts-container',
                 minRange: 120000 // 2 minutes
             },
             legend : {
@@ -543,7 +543,7 @@ mesowx.Config = (function() {
         }
     };
 
-    // ArchiveChart configuraion
+    // ArchiveChart configuration
     // Displays archive data.
     Config.archiveChartOptions = {
         aggregateDataProvider: Config.archiveDataProvider,
@@ -585,7 +585,7 @@ mesowx.Config = (function() {
         // see http://api.highcharts.com/highstock
         highstockChartOptions : {
             chart : {
-                renderTo: 'charts-container', 
+                renderTo: 'charts-container',
             },
             legend : {
                 enabled: true,
@@ -644,7 +644,7 @@ mesowx.Config = (function() {
             { fieldDef: Config.fieldDefaults.barometer },
             /*{ fieldDef: Config.fieldDefaults.windSpeed },
             {
-                fieldDef: Config.fieldDefaults.windDir, 
+                fieldDef: Config.fieldDefaults.windDir,
                 valueFormatter : Config.defaultDegreeToCardinalTextConverter,
                 valueDisplayManagerFactory: meso.MesoConsole.SimpleValueDisplayManagerFactory
             }*/
@@ -668,13 +668,13 @@ mesowx.Config = (function() {
     // Displays a compass to display wind direction along with the wind speed updated in real-time.
     Config.windCompassOptions = {
         windCompassConfig : {
-            containerId: 'compass', 
+            containerId: 'compass',
             maxPrevDirs : 0,
             windDirToCardinalLabelConverterFunction : Config.defaultDegreeToCardinalTextConverter
         },
         realTimeDataProvider : Config.realTimeDataProvider,
         windSpeedFieldDef : Config.fieldDefaults.windSpeed,
-        windDirFieldDef : Config.fieldDefaults.windDir, 
+        windDirFieldDef : Config.fieldDefaults.windDir,
         dateTimeFieldDef : Config.fieldDefaults.dateTime
     }
 
