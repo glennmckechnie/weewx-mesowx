@@ -1,19 +1,6 @@
-
 # [WeeWX-MesoWx](https://github.com/glennmckechnie/weewx-mesowx)
 
 This repo is a fork of MesoWx as originally implemented at [Mesowx](https://bitbucket.org/lirpa/mesowx)
-
-## History
-
-This repo starts with the 0.4.0 version which was the latest available on the 1st February 2018. It has been copied here to enable integration with Luc's raw.py and sync.py scripts
-No license was available at the time of upload but Peter Finley (MesoWx author) has indicated that it is [free to use](https://groups.google.com/d/msg/meso-user/ebs6sOhNqsg/iNeqnVarEgAJ)
-
-The extras directory now contains the updated scripts as written by Luc Heijst and were rewritten to keep pace with either the changes in weewx versions, or issues that arose and were reported by weewx users.
-Some of those scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded here as individual commits so viewing the commit history of the files will show those provided. Not all commits are working versions, the latest should be okay though.
-
-The aim is to incorporate the scripts and MesoWx into a skin that is installable using wee_extension.
-This repo is not intended to replace the original Lirpa (bitbucket) repo, rather it's an opportunity to keep it (or at least MesoWx) alive.
-
 
 # What is MesoWx
 
@@ -21,7 +8,19 @@ MesoWx is a real-time HTML front-end for visualizing personal weather station da
 
 MesoWx displays data from a database and does not itself interface with any weather station hardware directly, however, being built upon Meso it supports an HTTP API for remotely adding data, which allows integration with existing weather station software. MesoWx integrates well with Weewx and should support any weather station that it supports.
 
-June 2020: Time has passed and there are lot of excellent and capable skins available for weewx that are not only well integrated with weewx but feature packed. This one lacks the bells and whistles but is still quite capable at conveying the collected information, thanks to highcharts, decent hardware :-) and access to the whole database.
+**June 2020:** Time has passed and there are many more excellent and capable skins available for weewx now. They have evolved with the community and are not only well integrated with weewx but feature packed. This one lacks the bells and whistles but is still quite capable at conveying the collected information, thanks to highcharts, decent hardware :-) and access to the whole database.
+
+
+## History
+
+This repo started with the 0.4.0 version which was the latest available on the 1st February 2018. It has been copied here to enable integration with Luc's raw.py and sync.py scripts
+No license was available at the time of upload but Peter Finley (MesoWx author) has indicated that it is [free to use](https://groups.google.com/d/msg/meso-user/ebs6sOhNqsg/iNeqnVarEgAJ)
+
+The lirpa directory now contains the updated scripts as written by Luc Heijst and were rewritten to keep pace with either the changes in weewx versions, or issues that arose and were reported by weewx users.
+Some of those scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded here as individual commits so viewing the commit history of this repo will show the history. Not all commits are working versions, the latest should be okay though.
+
+Those scripts and accosiated contents will be incorporated into a skin that is installable using wee_extension.
+This repo is not intended to replace the original Lirpa (bitbucket) repo, rather it's an opportunity to keep it (or at least MesoWx) alive and current.
 
 ## Limitations
 
@@ -46,19 +45,14 @@ If that all seems too hard then contact me via github and we'll see what we can 
 
 ** Jun 2020 **
 The move to weewx_extension is done, it needs some beta testing...
+wee_extension will install and configure this skin as much as it can. More could be done with the integration and with support and contributions from the community that could still happen.
 
-The 3 original mesowx scripts have been combined into one script which
-are installed as a SLE - a skin named Mesowx, a script named mesowx.py
-and a database named mesowx.
+The 3 original mesowx scripts have been combined into one script which are installed as a SLE - a skin named Mesowx, a script named mesowx.py and a database named mesowx.
 
-wee_extension will install and configure this skin as much as it can.
-Because it has control over the local setup ... Raw ... you will find
-that version fully configured and ready to view in your browser at
-http://localhost/weewx/mesowx/
+Because it has control over the local setup ... Raw ... you will find that version fully configured and ready to view in your browser at http://localhost/weewx/mesowx/
 
-The skin is populated with values sourced from weewx.conf and the
-provided wee_extension install.py values. It applies them to both the
-Raw and RemoteSync versions.
+The skin is populated with values sourced from weewx.conf and the provided wee_extension install.py values. It applies them to both the Raw and RemoteSync versions.
+
 It also generates unique security keys for the RemoteSync version.
 
 # Install, then configure
@@ -68,28 +62,19 @@ It also generates unique security keys for the RemoteSync version.
 
 ## Local Installation.
 
-The local (Raw) mesowx database will be automatically generated and
-consists of just the raw (loop) table. The archive (REC) values will be
-sourced from your existing mysql weewx database.
+The local (Raw) mesowx database will be automatically generated and consists of just the raw (loop) table. The archive (REC) values will be sourced from your existing mysql weewx database.
 
-Once all the mesowx files are generated (at last count there were 45 of
-them) and transferred to your local web server the [StdReport][[Mesowx]]
-skin can be disabled by changing the enable = True stanza to...
+Once all the mesowx files are generated (at last count there were 45 of them) and transferred to your local web server the [StdReport][[Mesowx]] skin can be disabled by changing the enable = True stanza to...
 
     enable = False
 
-Why false? A working installation does not require that skin to be
-regenerated, it's a one time requirement; unless you later decide to
-change any of the [Mesowx] entries in weewx.conf in which case you'll
-need to renable the skin to allow the config files to be recreated.
+Why false? A working installation does not require that skin to be regenerated, it's a one time requirement; unless you later decide to change any of the [Mesowx] entries in weewx.conf in which case you'll need to renable the skin to allow the config files to be recreated.
 
 ## Remote Installation.
 
 The local (Raw) installation is setup to run once weewx is restarted.
-The RemoteSync installation is not. To get weewx to run this section of
-the script you will need to manually edit the weewx.conf file by appending
-user.mesowx.SyncService to the end of restful services, located under the
-[Engine][[Services]]section
+
+The RemoteSync installation is not. To get weewx to run this section of the script you will need to manually edit the weewx.conf file by appending user.mesowx.SyncService to the end of restful services, located under the [Engine][[Services]]section
 
 [...]
 
@@ -101,21 +86,15 @@ user.mesowx.SyncService to the end of restful services, located under the
 
 If and when you uninstall MesoWX, that entry will need to be removed.
 
-Likewise, if you don't want the local (Raw) version of Mesowx running
-then remove...
+Likewise, if you don't want the local (Raw) version of Mesowx running then remove...
+
 , user.mesowx.RawService
+
 from the end of the archive_services = [...] line
 
-The RemoteSync version will also need action on your part as all the files
-that are generated and transferred to the local web server need to be
-transferred to your remote web server. This is the exact same directory
-and structure as the local, Raw version uses.  (ie:- That
-www/html/weewx/mesowx directory is portable.)
+The RemoteSync version will also need action on your part as all the files that are generated and transferred to the local web server need to be transferred to your remote web server. This is the exact same directory and structure as the local, Raw version uses.  (ie:- That www/html/weewx/mesowx directory is portable.)
 
-Copy that whole mesowx directory to your remote webserver and then; once
-all the files and directories are moved to that remote machine; then
-rename config-RemoteSync.json to config.json to allow that remote
-installation to work correctly.
+Copy that whole mesowx directory to your remote webserver and then; once all the files and directories are moved to that remote machine; then rename config-RemoteSync.json to config.json to allow that remote installation to work correctly.
 
 ie:- the file...
 
@@ -125,36 +104,26 @@ needs to be renamed as...
 
        mesowx/meso/include/config.json
 
-With that done you should have a working installation; once the database
-is created and populated with data then you will know for certain.
+With that done you should have a working installation; once the database is created and populated with data then you will know for certain.
 
 ## Enhance or Break??
 
-You now have a working setup, but it makes a few assumptions about
-fields and units. These can all be modified but you might end up with
-some breakage.
+You now have a working setup, but it makes a few assumptions about fields and units. These can all be modified but you might end up with some breakage.
 
-As configured, it will only use the database fields as harcoded within
-the file config.json.
+As configured, it will only use the database fields as harcoded within the file config.json.
 
 They are listed under "columns", in two places.
 
-Once at line 58 for the archive table, then again at line 107 for the
-raw (loop) values.  This is also one of the places to change the units,
-default is in US units.
+Once at line 58 for the archive table, then again at line 107 for the raw (loop) values.  This is also one of the places to change the units, default is in US units.
 
 The other location is under mesowx/js/Config.js
 
-If you change from the defaults, by editing these files; then be careful
-as typos can be silent code breakers. Take a backup and use a lot of
-care. All these edits need to be done before you create the remote
-database or allow it to be populated.
+If you change from the defaults, by editing these files; then be careful as typos can be silent code breakers. Take a backup and use a lot of care. All these edits need to be done before you create the remote database or allow it to be populated.
 
 ## Testing the default installation
                  (ie: excluding the above modifications).
 
-A quick test of the configuration is to point the browser to the remote
-site using...
+A quick test of the configuration is to point the browser to the remote site using...
 
 http://<your_site>/weewx/mesowx/meso/data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
 
@@ -173,36 +142,25 @@ A database that doesn't exist will throw a Fatal error...
         /var/www/html/weewx/mesowx/meso/include/PDOConnectionFactory.class.php on
        line 31
 
-To create the remote database and give the appropriate permissions that
-match the wee_extension installation values, then...
+To create the remote database and give the appropriate permissions that match the wee_extension installation values, then...
 
        mysql -uroot -p
        create database mesowx;
        GRANT select, update, create, delete, insert ON mesowx.* TO mesowx@'localhost' IDENTIFIED BY 'weewx';
        quit;
 
-The remote mysql database - mesowx - contains 2 tables; archive and raw
-(weewx, the mesowx.py script, will create those).
+The remote mysql database - mesowx - contains 2 tables; archive and raw (weewx, the mesowx.py script, will create those).
 
 A large database will take a lot to create via the backfill method.
-For this reason the archive section should be copied from your existing
-weewx database via a mysqldump command, or other means.
+For this reason the archive section should be copied from your existing weewx database via a mysqldump command, or other means.
 
-If that doesn't worry you, or if it's a machine that you can see from
-your chair (ie: it's local and an ultra low ping away) then mesowx.py
-can be used to backfill an empty database. It can take a long time (just
- how long is a piece of string?) to complete when you start from scratch.
-If it's too large it may even refuse, or your machine may be brought to
-it's knees while the database is being queried (admittedly if you
-survive that step it does get better).
+If that doesn't worry you, or if it's a machine that you can see from your chair (ie: it's local and an ultra low ping away) then mesowx.py can be used to backfill an empty database. It can take a long time (just  how long is a piece of string?) to complete when you start from scratch.
 
-While it's doing that long backfill, weewx will be stalled, that's no
-records generated, no graphs, nothing, nada, zilch. The only activity
-may be in your logs - if debug is turned on.
+If it's too large it may even refuse, or your machine may be brought to it's knees while the database is being queried (admittedly if you survive that step it does get better).
 
-Once the database is populated (or starting to be) then pointing your
-browser to the remote machines webserver mesowx/index.html file should
-result in a working mesowx website.
+While it's doing that long backfill, weewx will be stalled, that's no records generated, no graphs, nothing, nada, zilch. The only activity may be in your logs - if debug is turned on.
+
+Once the database is populated (or starting to be) then pointing your browser to the remote machines webserver mesowx/index.html file should result in a working mesowx website.
 
 # To repeat:
            Use wee_extension to install MesoWX.
@@ -228,63 +186,34 @@ result in a working mesowx website.
 
 # Further notes:
 
-The backfill operation will perform a bulk transfer of historical
-records. It only runs on start up and only deals with archive (REC)
-records.
+The backfill operation will perform a bulk transfer of historical records. It only runs on start up and only deals with archive (REC) records.
 You basically get one chance to do a (database) backfill operation.
 
-Obviously, if you stop weewx (or remove the RemoteSync call) delete the
-remote (NB that's the remote!) database contents (that's the incomplete,
-unimportant one), start weewx, transfer, rinse, repeat then the exception
-will prove the rule.
+Obviously, if you stop weewx (or remove the RemoteSync call) delete the remote (NB that's the remote!) database contents (that's the incomplete, unimportant one), start weewx, transfer, rinse, repeat then the exception will prove the rule.
 
-After that backfill operation has finished (or been interrupted) the Queue
-takes over and archive and/or loop values will be available as weewx
-generates them.
+After that backfill operation has finished (or been interrupted) the Queue takes over and archive and/or loop values will be available as weewx generates them.
 
-If the data flow to the remote server is interrupted, those records will
-be permanently dropped. Loop are gone forever, archive records will be
-available from the weewx database.
+If the data flow to the remote server is interrupted, those records will be permanently dropped. Loop are gone forever, archive records will be available from the weewx database.
 
-(Loop values are already restricted to a 24 hour period before they are
-deleted from the database although 24 hours can be overridden in the
-weewx.conf [[Raw]] section).
+(Loop values are already restricted to a 24 hour period before they are deleted from the database although 24 hours can be overridden in the weewx.conf [[Raw]] section).
 
-Restarting weewx will start the backfill operation again but if a
-current archive packet has been written to the remote database then as
-far as the backfill operation knows, all is golden. There is nothing for
-it to do.
+Restarting weewx will start the backfill operation again but if a current archive packet has been written to the remote database then as far as the backfill operation knows, all is golden. There is nothing for it to do.
 
-If you are certain there are gaps in the remote data, then you need to
-fill them manually. You could do a mysqldump style operation, or...
+If you are certain there are gaps in the remote data, then you need to fill them manually. You could do a mysqldump style operation, or...
 
-You can stop weewx, delete everything at the remote end that covers the
-missing data upto the present time; then start weewx and the backfill
-process should pick up on that deletion and perform the required
-backfill.
+You can stop weewx, delete everything at the remote end that covers the missing data upto the present time; then start weewx and the backfill process should pick up on that deletion and perform the required backfill.
 
-There are 2 README files in the github repo (also in the downloaded zip
-file).  If you have problems read those. They cover the history of the
-setup and while out of date they may fill in some knowledge gaps.
+There are 2 README files in the github repo (also in the downloaded zip file).  If you have problems read those. They cover the history of the setup and while out of date they may fill in some knowledge gaps.
 
-RetainLoopValues.py is not a file I've ever used. It's included within
-this script, nothings been changed except to incorporate it as a
-function.
+RetainLoopValues.py is not a file I've ever used. It's included within this script, nothings been changed except to incorporate it as a function.
 
 # Security: !!!
 
-You are responsible for the security of your webserver and mysql
-database.
+You are responsible for the security of your webserver and mysql database.
 
-The installer will generate 2 random passwords and insert them into the
-script as well as the relevant config files. If you don't trust them
-change them but don't make any typos in the process or you will break
-the remote access granted to weewx and the database.
+The installer will generate 2 random passwords and insert them into the script as well as the relevant config files. If you don't trust them change them but don't make any typos in the process or you will break the remote access granted to weewx and the database.
 
-With those passwords, and others that could be available to anyone with
-webserver access, you need to prevent them being read.  For the apache2
-installation here I've added the following to /etc/apache2/apache2.conf
-to prevent any files being accessed that are not index.html
+With those passwords, and others that could be available to anyone with webserver access, you need to prevent them being read.  For the apache2 installation here I've added the following to /etc/apache2/apache2.conf to prevent any files being accessed that are not index.html
 
        <Directory /var/www/html/weewx/mesowx>
                Options -Indexes
@@ -292,8 +221,7 @@ to prevent any files being accessed that are not index.html
                Require all granted
        </Directory>
 
-You will need to do the same, or similar depending on your webserver and
-installation. You'll then check that it does what is intended.
+You will need to do the same, or similar depending on your webserver and installation. You'll then check that it does what is intended.
 
 # Finally:
 

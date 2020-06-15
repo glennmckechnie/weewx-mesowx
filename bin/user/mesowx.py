@@ -75,10 +75,6 @@ except ImportError:
     def logerr(msg):
         logmsg(syslog.LOG_ERR, msg)
 
-# raw.0.4.1-lh.py
-#
-# 2015-12-28 Modified by Luc Heijst to work with weewx version 3.3.1
-#
 # sync.py start
 
 if weewx.__version__ < "4":
@@ -137,14 +133,6 @@ schema = [
     ('rainBatteryStatus', 'REAL'),
     ('outTempBatteryStatus', 'REAL'),
     ('inTempBatteryStatus', 'REAL')]
-
-
-def get_default_binding_dict():
-    return {'database': 'raw_mysql',
-            'manager': 'weewx.manager.Manager',
-            'table_name': 'raw',
-            'schema': 'user.raw.schema'}
-# end raw.0.4.1-lh.py specifics
 
 
 class SyncError(Exception):
