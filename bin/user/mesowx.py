@@ -1163,10 +1163,8 @@ class Mesowx(SearchList):
                           'Databases']['mesowx_mysql'].get('table_name',
                                                            'raw')
 
-        # target_unit = METRICWX    # Options are 'US', 'METRICWX', or 'METRIC'
         wee_units = self.generator.config_dict['StdConvert'].get(
                          'target_unit', 'METRICWX')
-        loginf("UNITS are %s" % wee_units)
         if 'US' in wee_units:
             self.degr = 'f'
             self.press = 'inHg'
