@@ -79,7 +79,7 @@ Once all the mesowx files are generated (at last count there were 49 of them) an
 
     enable = False
 
-Why False? 
+Why False?
 A working installation does not require that skin to be regenerated, it's a one time requirement; unless you later decide to change any of the [Mesowx] entries in weewx.conf in which case you'll need to renable the skin to allow the config files to be recreated.
 
 ## Remote Installation.
@@ -152,9 +152,9 @@ If you are going to add fields that will be fine, you don't have to use them. Ho
 The other location that will need to be modified is under mesowx/js/Config.js
 
      Config.fieldDefaults = {
-        'dateTime':         new meso.FieldDef('dateTime',       meso.Unit.ms,           0,      meso.Agg.avg),
-        'outTemp':          new meso.FieldDef('outTemp',        mesowx.Unit.f,          1,      meso.Agg.avg,   'Out Temp'),
-        'dewpoint':         new meso.FieldDef('dewpoint',       mesowx.Unit.f,          1,      meso.Agg.avg,   'Dewpoint'),
+        'dateTime':   new meso.FieldDef('dateTime',    meso.Unit.ms,      0,   meso.Agg.avg),
+        'outTemp':    new meso.FieldDef('outTemp',     mesowx.Unit.f,     1,   meso.Agg.avg, 'Out Temp'),
+        'dewpoint':   new meso.FieldDef('dewpoint',    mesowx.Unit.f,     1,   meso.Agg.avg, 'Dewpoint'),
         'rain':       new meso.FieldDef('rain',        mesowx.Unit.in,    2,   meso.Agg.sum, 'Rain'),
         'rainRate':   new meso.FieldDef('rainRate',    mesowx.Unit.inHr,  2,   meso.Agg.max, 'Rain Rate'),
         'dayRain':    new meso.FieldDef('dayRain',     mesowx.Unit.in,    2,   meso.Agg.max, 'Rain Today'),
@@ -171,7 +171,7 @@ The other location that will need to be modified is under mesowx/js/Config.js
     };
 
 
-If you change any of these defaults, by editing these files directly; then be very careful as typos can be silent code breakers. 
+If you change any of these defaults, by editing these files directly; then be very careful as typos can be silent code breakers.
 
 Take a backup (as you always do ?) and use a lot of care. 
 
@@ -337,24 +337,23 @@ Bug reports to github...
          all errors are possible when initially setting it up, but only #1
            and possibly #3 should occur after that, thus always fail for #2,
            and retry for #1 and #3
-           
-# Troubleshooting 
+
+# Troubleshooting
 
 These are from README-lirpa.md, the original notes included when Mesowx was first released. They are still relevant
 
-Check your web server/PHP logs for errors. Make sure that logging is enabled in your `php.ini`. To confirm,·
-check your `php.ini` for the following diretives:
+Check your web server/PHP logs for errors. Make sure that logging is enabled in your _php.ini_. To confirm,
+check your 'php.ini' for the following directives:
 
 * [log_errors](http://www.php.net/manual/en/errorfunc.configuration.php#ini.log-errors) enabled
 * [error_log](http://www.php.net/manual/en/errorfunc.configuration.php#ini.error-log) where to look for logs
-* [error_reporting](http://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting) should be set to `E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED`
+* [error_reporting](http://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting) should be set to 'E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED'
 
-To help pinpoint the issues, it can be helpful to inspect the browser network traffic using a development tool·
-Use "Inspect Element" in Firefox and keep an eye out for javascript errors. Using these tools you can inspect the HTTP responses·
+To help pinpoint the issues, it can be helpful to inspect the browser network traffic using a development tool.
+Use "Inspect Element" in Firefox and keep an eye out for javascript errors. Using these tools you can inspect the HTTP responses.
 For more details about what the root cause may be.
 
-mesowx.py errors will be logged to syslog. Try putting Weewx in debug mode (set `debug=1` in your
-weewx.conf) to gather more information.
+mesowx.py errors will be logged to syslog. Try putting Weewx in debug mode (set 'debug=1' in your weewx.conf) to gather more information.
 
 ----
 # HALT, before you continue reading, take note.
