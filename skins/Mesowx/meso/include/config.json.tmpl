@@ -72,20 +72,20 @@
             "columns" : {
                 "dateTime" :    {"type" : "number", "unit" : "s"},
                 "interval" :    {},
-                "barometer" :   {"unit" : "hPa"},
-                "inTemp" :      {"unit" : "c"},
-                "outTemp" :     {"unit" : "c"},
+                "barometer" :   {"unit" : "$press"},
+                "inTemp" :      {"unit" : "$degr"},
+                "outTemp" :     {"unit" : "$degr"},
                 "inHumidity" :  {"unit" : "perc"},
                 "outHumidity" : {"unit" : "perc"},
-                "windSpeed" :   {"unit" : "kph"},
+                "windSpeed" :   {"unit" : "$speed"},
                 "windDir" :     {"unit" : "deg"},
-                "windGust" :    {"unit" : "kph"},
+                "windGust" :    {"unit" : "$speed"},
                 "windGustDir" : {"unit" : "deg"},
-                "rainRate" :    {"unit" : "mmHr"},
-                "rain" :        {"unit" : "mm"},
-                "dewpoint" :    {"unit" : "c"},
-                "windchill" :   {"unit" : "c"},
-                "heatindex" :   {"unit" : "c"}
+                "rainRate" :    {"unit" : "$rainR"},
+                "rain" :        {"unit" : "$meas"},
+                "dewpoint" :    {"unit" : "$degr"},
+                "windchill" :   {"unit" : "$degr"},
+                "heatindex" :   {"unit" : "$degr"}
             },
             // constraints on the data, only primaryKey is supported currently
             "constraints" : {
@@ -120,18 +120,18 @@
             },
             "columns" : {
                 "dateTime" :    {"unit" : "s"},
-                "barometer" :   {"unit" : "hPa"},
-                "inTemp" :      {"unit" : "c"},
-                "outTemp" :     {"unit" : "c"},
+                "barometer" :   {"unit" : "$press"},
+                "inTemp" :      {"unit" : "$degr"},
+                "outTemp" :     {"unit" : "$degr"},
                 "inHumidity" :  {"unit" : "perc"},
                 "outHumidity" : {"unit" : "perc"},
-                "windSpeed" :   {"unit" : "kph"},
+                "windSpeed" :   {"unit" : "$speed"},
                 "windDir" :     {"unit" : "deg"},
-                "rainRate" :    {"unit" : "mmHr"},
-                "dayRain" :     {"unit" : "mm"},
-                "dewpoint" :    {"unit" : "c"},
-                "windchill" :   {"unit" : "c"},
-                "heatindex" :   {"unit" : "c"}
+                "rainRate" :    {"unit" : "$rainR"},
+                "dayRain" :     {"unit" : "$meas"},
+                "dewpoint" :    {"unit" : "$degr"},
+                "windchill" :   {"unit" : "$degr"},
+                "heatindex" :   {"unit" : "$degr"}
             },
             "constraints" : {
                 "primaryKey" : "dateTime"
@@ -139,19 +139,26 @@
         }
     }
 }
-// Imperial units from original setup
-//
-//              "barometer" :   {"unit" : "inHg"},
-//              "inTemp" :      {"unit" : "f"},
-//              "outTemp" :     {"unit" : "f"},
-//              "inHumidity" :  {"unit" : "perc"},
-//              "outHumidity" : {"unit" : "perc"},
-//              "windSpeed" :   {"unit" : "mph"},
-//              "windDir" :     {"unit" : "deg"},
-//              "windGust" :    {"unit" : "mph"},
-//              "windGustDir" : {"unit" : "deg"},
-//              "rainRate" :    {"unit" : "inHr"},
-//              "rain" :        {"unit" : "in"},
-//              "dewpoint" :    {"unit" : "f"},
-//              "windchill" :   {"unit" : "f"},
-//              "heatindex" :   {"unit" : "f"}
+
+/* Auto filled values, for reference only
+also refer to meso/include/Unit.class.php
+
+if 'US' in wee_units:
+     self.degr = 'f'
+     self.press = 'inHg'
+     self.meas = 'in'
+     self.speed = 'mph'
+     self.rainR = 'inHr'
+elif 'METRIC' in wee_units:
+     self.degr = 'c'
+     self.press = 'hPa'
+     self.meas = 'cm'
+     self.speed = 'kph'
+     self.rainR = 'cmHr'
+elif 'METRICWX' in wee_units:
+     self.degr = 'c'
+     self.press = 'hPa'
+     self.meas = 'mm'
+     self.speed = 'mps'
+     self.rainR = 'mmHr'
+*/

@@ -121,8 +121,9 @@ With that done you should have a working webserver installation; once the databa
 ## Enhance or Break??
 
 Okay, You now have a working setup, but it makes a few assumptions about fields and units. These can all be modified but you might end up with some breakage.
+As of version 0.5.1 the installer will adjust the units it can according to the configuration of the target_units setting defined in weewx.conf ie: US, METRICWX or METRIC. You may want to refine them further and it is here that it is done (after the skin is disabled, otherwise your edits will be overwritten.)
 
-As configured, it will only use the database fields as harcoded within the file config.json
+As configured, it will only use the database fields as hardcoded within the file config.json
 
 They are listed under "columns", in two places. Here's the one at line 58 for the archive table...
 
@@ -149,7 +150,7 @@ then again at line 107 for the raw (loop) values.  This is also one of the place
 
 If you are going to add fields that will be fine, you don't have to use them. However those edits need to be done before you create the remote database or allow it to be populated. It can't create what it doesn't know about.
 
-The other location that will need to be modified is under mesowx/js/Config.js
+The other location that will need to be modified is under mesowx/js/Config.js and these units will also be modified according to weewx.conf
 
      Config.fieldDefaults = {
         'dateTime':   new meso.FieldDef('dateTime',    meso.Unit.ms,      0,   meso.Agg.avg),
@@ -173,7 +174,7 @@ The other location that will need to be modified is under mesowx/js/Config.js
 
 If you change any of these defaults, by editing these files directly; then be very careful as typos can be silent code breakers.
 
-Take a backup (as you always do ?) and use a lot of care. 
+Take a backup (as you always do ?) and use a lot of care.
 
 ## Testing the default installation
                  (ie: excluding the above modifications).
@@ -342,8 +343,8 @@ Bug reports to github...
 
 These are from README-lirpa.md, the original notes included when Mesowx was first released. They are still relevant
 
-Check your web server/PHP logs for errors. Make sure that logging is enabled in your _php.ini_. To confirm,
-check your 'php.ini' for the following directives:
+Check your web server/PHP logs for errors. Make sure that logging is enabled in your _php.ini_
+To confirm, check your 'php.ini' for the following directives:
 
 * [log_errors](http://www.php.net/manual/en/errorfunc.configuration.php#ini.log-errors) enabled
 * [error_log](http://www.php.net/manual/en/errorfunc.configuration.php#ini.error-log) where to look for logs

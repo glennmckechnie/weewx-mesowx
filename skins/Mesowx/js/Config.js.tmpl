@@ -27,20 +27,20 @@ mesowx.Config = (function() {
     //    label = the label to use when referencing the field in the UI
     Config.fieldDefaults = {
         'dateTime':         new meso.FieldDef('dateTime',       meso.Unit.ms,           0,      meso.Agg.avg),
-        'outTemp':          new meso.FieldDef('outTemp',        mesowx.Unit.f,          1,      meso.Agg.avg,   'Out Temp'),
-        'dewpoint':         new meso.FieldDef('dewpoint',       mesowx.Unit.f,          1,      meso.Agg.avg,   'Dewpoint'),
-        'rain':             new meso.FieldDef('rain',           mesowx.Unit.in,         2,      meso.Agg.sum,   'Rain'),
-        'rainRate':         new meso.FieldDef('rainRate',       mesowx.Unit.inHr,       2,      meso.Agg.max,   'Rain Rate'),
-        'dayRain':          new meso.FieldDef('dayRain',        mesowx.Unit.in,         2,      meso.Agg.max,   'Rain Today'),
-        'windSpeed':        new meso.FieldDef('windSpeed',      mesowx.Unit.mph,        0,      meso.Agg.avg,   'Wind Speed'),
+        'outTemp':          new meso.FieldDef('outTemp',        mesowx.Unit.$degr,          1,      meso.Agg.avg,   'Out Temp'),
+        'dewpoint':         new meso.FieldDef('dewpoint',       mesowx.Unit.$degr,          1,      meso.Agg.avg,   'Dewpoint'),
+        'rain':             new meso.FieldDef('rain',           mesowx.Unit.$meas,         2,      meso.Agg.sum,   'Rain'),
+        'rainRate':         new meso.FieldDef('rainRate',       mesowx.Unit.$rainR,       2,      meso.Agg.max,   'Rain Rate'),
+        'dayRain':          new meso.FieldDef('dayRain',        mesowx.Unit.$meas,         2,      meso.Agg.max,   'Rain Today'),
+        'windSpeed':        new meso.FieldDef('windSpeed',      mesowx.Unit.$speed,        0,      meso.Agg.avg,   'Wind Speed'),
         'windDir':          new meso.FieldDef('windDir',        mesowx.Unit.deg,        0,      meso.Agg.avg,   'Wind Direction'),
-        'windGust':         new meso.FieldDef('windGust',       mesowx.Unit.mph,        0,      meso.Agg.avg,   'Wind Gust'),
+        'windGust':         new meso.FieldDef('windGust',       mesowx.Unit.$speed,        0,      meso.Agg.avg,   'Wind Gust'),
         'windGustDir':      new meso.FieldDef('windGustDir',    mesowx.Unit.deg,        0,      meso.Agg.avg,   'Wind Gust Direction'),
         'outHumidity':      new meso.FieldDef('outHumidity',    mesowx.Unit.perc,       1,      meso.Agg.avg,   'Out Humidity'),
-        'barometer':        new meso.FieldDef('barometer',      mesowx.Unit.inHg,       3,      meso.Agg.avg,   'Barometric Pressure'),
-        'windchill':        new meso.FieldDef('windchill',      mesowx.Unit.f,          1,      meso.Agg.avg,   'Wind Chill'),
-        'heatindex':        new meso.FieldDef('heatindex',      mesowx.Unit.f,          1,      meso.Agg.avg,   'Heat Index'),
-        'inTemp':           new meso.FieldDef('inTemp',         mesowx.Unit.f,          1,      meso.Agg.avg,   'In Temp'),
+        'barometer':        new meso.FieldDef('barometer',      mesowx.Unit.$press,       3,      meso.Agg.avg,   'Barometric Pressure'),
+        'windchill':        new meso.FieldDef('windchill',      mesowx.Unit.$degr,          1,      meso.Agg.avg,   'Wind Chill'),
+        'heatindex':        new meso.FieldDef('heatindex',      mesowx.Unit.$degr,          1,      meso.Agg.avg,   'Heat Index'),
+        'inTemp':           new meso.FieldDef('inTemp',         mesowx.Unit.$degr,          1,      meso.Agg.avg,   'In Temp'),
         'inHumidity':       new meso.FieldDef('inHumidity',     mesowx.Unit.perc,       1,      meso.Agg.avg,   'In Humidity')
     };
 

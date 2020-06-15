@@ -41,7 +41,7 @@ from weewx.engine import StdService
 from weewx.cheetahgenerator import SearchList
 import weeutil.weeutil
 
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -1162,6 +1162,29 @@ class Mesowx(SearchList):
         self.mesowx_table = self.generator.config_dict[
                           'Databases']['mesowx_mysql'].get('table_name',
                                                            'raw')
+
+        # target_unit = METRICWX    # Options are 'US', 'METRICWX', or 'METRIC'
+        wee_units = self.generator.config_dict['StdConvert'].get(
+                         'target_unit', 'METRICWX')
+        loginf("UNITS are %s" % wee_units)
+        if 'US' in wee_units:
+            self.degr = 'f'
+            self.press = 'inHg'
+            self.meas = 'in'
+            self.speed = 'mph'
+            self.rainR = 'inHr'
+        elif 'METRICWX' in wee_units:
+            self.degr = 'c'
+            self.press = 'hPa'
+            self.meas = 'mm'
+            self.speed = 'mps'
+            self.rainR = 'mmHr'
+        else:  # must be METRIC !
+            self.degr = 'c'
+            self.press = 'hPa'
+            self.meas = 'cm'
+            self.speed = 'kph'
+            self.rainR = 'cmHr'
 
         # the wee_extension install process will create 2 unique keys and add
         # them to weewx.conf. Change them if you like but the warranty goes

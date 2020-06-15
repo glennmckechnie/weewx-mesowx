@@ -1,5 +1,9 @@
 # MesoWx Change Log #
 
+## 0.5.1 (2020-06-15) ##
+
+* Auto set units according to the configuration found in weewx.conf - US, METRICWX or METRIC
+
 ## 0.5.0 (2020-06-14) ##
 
 ### Simplify / Automate the install

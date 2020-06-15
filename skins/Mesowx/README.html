@@ -97,8 +97,9 @@ A working installation does not require that skin to be regenerated, it&rsquo;s 
 </code></pre>
 <p>With that done you should have a working webserver installation; once the database is created and populated with data then you will know for certain.</p>
 <h2>Enhance or Break??</h2>
-<p>Okay, You now have a working setup, but it makes a few assumptions about fields and units. These can all be modified but you might end up with some breakage.</p>
-<p>As configured, it will only use the database fields as harcoded within the file config.json</p>
+<p>Okay, You now have a working setup, but it makes a few assumptions about fields and units. These can all be modified but you might end up with some breakage.
+As of version 0.5.1 the installer will adjust the units it can according to the configuration of the target_units setting defined in weewx.conf ie: US, METRICWX or METRIC. You may want to refine them further and it is here that it is done (after the skin is disabled, otherwise your edits will be overwritten.)</p>
+<p>As configured, it will only use the database fields as hardcoded within the file config.json</p>
 <p>They are listed under &ldquo;columns&rdquo;, in two places. Here&rsquo;s the one at line 58 for the archive table&hellip;</p>
 <pre><code>"columns" : {
             "dateTime" :    {"type" : "number", "unit" : "s"},
@@ -121,7 +122,7 @@ A working installation does not require that skin to be regenerated, it&rsquo;s 
 </code></pre>
 <p>then again at line 107 for the raw (loop) values.  This is also one of the places to change the units, the default is in US units.</p>
 <p>If you are going to add fields that will be fine, you don&rsquo;t have to use them. However those edits need to be done before you create the remote database or allow it to be populated. It can&rsquo;t create what it doesn&rsquo;t know about.</p>
-<p>The other location that will need to be modified is under mesowx/js/Config.js</p>
+<p>The other location that will need to be modified is under mesowx/js/Config.js and these units will also be modified according to weewx.conf</p>
 <pre><code> Config.fieldDefaults = {
     'dateTime':   new meso.FieldDef('dateTime',    meso.Unit.ms,      0,   meso.Agg.avg),
     'outTemp':    new meso.FieldDef('outTemp',     mesowx.Unit.f,     1,   meso.Agg.avg, 'Out Temp'),
@@ -142,7 +143,7 @@ A working installation does not require that skin to be regenerated, it&rsquo;s 
 };
 </code></pre>
 <p>If you change any of these defaults, by editing these files directly; then be very careful as typos can be silent code breakers.</p>
-<p>Take a backup (as you always do ?) and use a lot of care. </p>
+<p>Take a backup (as you always do ?) and use a lot of care.</p>
 <h2>Testing the default installation</h2>
 <pre><code>             (ie: excluding the above modifications).
 </code></pre>
@@ -272,8 +273,8 @@ ie: stop weewx, empty the <strong>remote</strong> database, restart weewx, watch
 </code></pre>
 <h1>Troubleshooting</h1>
 <p>These are from README-lirpa.md, the original notes included when Mesowx was first released. They are still relevant</p>
-<p>Check your web server/PHP logs for errors. Make sure that logging is enabled in your <em>php.ini</em>. To confirm,
-check your &lsquo;php.ini&rsquo; for the following directives:</p>
+<p>Check your web server/PHP logs for errors. Make sure that logging is enabled in your <em>php.ini</em>
+To confirm, check your &lsquo;php.ini&rsquo; for the following directives:</p>
 <ul>
 <li><a href="http://www.php.net/manual/en/errorfunc.configuration.php#ini.log-errors">log_errors</a> enabled</li>
 <li><a href="http://www.php.net/manual/en/errorfunc.configuration.php#ini.error-log">error_log</a> where to look for logs</li>
