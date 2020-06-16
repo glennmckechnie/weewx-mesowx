@@ -41,7 +41,7 @@ from weewx.engine import StdService
 from weewx.cheetahgenerator import SearchList
 import weeutil.weeutil
 
-VERSION = "0.5.2"
+VERSION = "0.5.3"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -940,6 +940,7 @@ class RawService(StdService):
         self.config_dict = config_dict
         d = self.config_dict['Mesowx']['Raw']
         self.dataLimit = int(d.get('data_limit', 24))
+        self.skip_loop = int(d.get('skip_loop', 2))
 
         # get the database parameters we need to function
         # self.binding = self.config_dict['DataBindings'].get('mesowx_binding')
@@ -992,12 +993,12 @@ class RawService(StdService):
         # and then returned immediately when looping resumes, coupled with the
         # fact that for Vantage Pro consoles the dateTime value is added by
         # weewx. So, for database storage, skip the duplicates until we get a
-        # new one to avoid a duplicate key error, but publish them all to redis
-        # regardless.
+        # new one to avoid a duplicate key error, but publish them all to avoid
+        # a duplicate key error
         dateTime = packet['dateTime']
         # loginf('if dateTime (%s) > lastloopDateTime + 42 (%s)' % (dateTime,
         #        (self.lastLoopDateTime +42)))
-        if dateTime > (self.lastLoopDateTime + 2):
+        if dateTime > (self.lastLoopDateTime + self.skip_loop):
             self.dbm.addRecord(packet)
             self.lastLoopDateTime = dateTime
         if dateTime > (self.lastPrunedDateTime + prune_period):
@@ -1162,6 +1163,11 @@ class Mesowx(SearchList):
         self.mesowx_host = self.sync_config.get('mesowx_host', 'localhost')
         self.mesowx_user = self.sync_config.get('mesowx_user', 'mesowx')
         self.mesowx_pass = self.sync_config.get('mesowx_pass', 'weewx')
+
+        self.data_limit = int(self.generator.config_dict[
+                                  'Mesowx']['Raw'].get('data_limit', 24))
+        # retention policy limit for raw database, in seconds
+        self.data_limit_seconds = int(self.data_limit * 3600)
         # polling interval: time between loop packets in seconds (for dash
         # refresh rate)
         self.poll_ms = int(self.generator.config_dict['Mesowx'].get(

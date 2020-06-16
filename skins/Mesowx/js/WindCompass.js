@@ -28,7 +28,7 @@ function WindCompass(config) {
         keyFunction : function(d){ return d[0]; },
         dirValueFunction : function(d){ return d[1]; },
         speedValueFunction : function(d){ return d[2]; },
-        windSpeedUnitLabel : "mph",
+        windSpeedUnitLabel : "kph",
         windDirToCardinalLabelConverterFunction : defaultWindDirToCardinalConverter
     };
 
@@ -57,7 +57,7 @@ function WindCompass(config) {
     // speed display
     var speedDisplay = compass.append("text")
         .attr("class", "speedDisplay")
-        .attr("dx", "50%") 
+        .attr("dx", "50%")
         .attr("dy", "50%");
         // speed readout
         speedDisplay
@@ -114,7 +114,7 @@ function WindCompass(config) {
                             //this.textContent = Math.round(v);
                         }
                     });
-            }) 
+            })
             .each('end', function() {
                 if( config.maxPrevDirs ) {
                     // update previous dirs
@@ -128,19 +128,19 @@ function WindCompass(config) {
         var speedReadout = compass.selectAll(".speedReadout")
             .data(data);
         speedReadout
-            /*.style("fill", function(d) { 
+            /*.style("fill", function(d) {
                 var oldVal = this.textContent;
                 var newVal = config.speedValueFunction(d);
                 if( newVal != oldVal ) return ( newVal > oldVal ? "#00C90D" : "#E00000");
                 return null;
             })*/
             .text(function(d){ return Math.round(config.speedValueFunction(d)); });
-            /*.classed('value-up', function(d) { 
+            /*.classed('value-up', function(d) {
                 var oldVal = this.textContent;
                 var newVal = config.speedValueFunction(d);
                 return newVal > oldVal;
             })
-            .classed('value-down', function(d) { 
+            .classed('value-down', function(d) {
                 var oldVal = this.textContent;
                 var newVal = config.speedValueFunction(d);
                 return newVal < oldVal;
@@ -214,7 +214,7 @@ function WindCompass(config) {
             return "rotate(" + interpolateDegrees(da, db)(t) + mb[2] + ")";
         }
     }
-    
+
     function interpolateDegrees(a, b) {
         if( a==null ) a = 0;
         if( b==null ) b = 0;

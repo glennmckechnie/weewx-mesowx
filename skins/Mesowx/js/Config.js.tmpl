@@ -190,7 +190,7 @@ mesowx.Config = (function() {
                 tickInterval: 90,
                 labels: {
                     formatter: function() {
-                        return Config.degreeOrdinalLabels[this.value.toString()]; 
+                        return Config.degreeOrdinalLabels[this.value.toString()];
                     }
                 }
             },
@@ -442,7 +442,7 @@ mesowx.Config = (function() {
             },
             rangeSelector : {
                 enabled: true,
-                selected : 5,
+                selected : 6,
                 buttons: [{
                     type: 'minute',
                     count: 15,
@@ -464,8 +464,12 @@ mesowx.Config = (function() {
                     count: 12,
                     text: '12h'
                 }, {
-                    type: 'all',
+                    type: 'day',
+                    count: 1,
                     text: '24h'
+                }, {
+                    type: 'all',
+                    text: 'All'
                 }],
                 inputDateFormat : "%l:%M:%S%P",
                 inputEditDateFormat : "%l:%M:%S%P",
@@ -593,7 +597,8 @@ mesowx.Config = (function() {
             },
             rangeSelector : {
                 enabled: true,
-                selected : 5,
+                //selected : 5, // defaults to All
+                selected : 2, // defaults to 1 month for faster initial load
                 buttons: [{
                     type: 'day',
                     count: 1,

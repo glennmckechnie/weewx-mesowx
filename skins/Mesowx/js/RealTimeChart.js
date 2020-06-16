@@ -13,7 +13,7 @@ mesowx.RealTimeChart = (function() {
 
     RealTimeChart.prototype.destroy = function() {
         // unsubscribe from the subscription
-        this._dataSubscription.unsubscribe(); 
+        this._dataSubscription.unsubscribe();
         _super.destroy.call(this);
     };
 
@@ -44,7 +44,7 @@ mesowx.RealTimeChart = (function() {
             navigator : {
                 // enabling navigator because otherwise chart doesn't redraw when new points are added
                 // http://highslide.com/forum/viewtopic.php?uid=12580&f=12&t=16506&start=0
-                enabled: true 
+                enabled: true
             }
         };
         return meso.Util.applyDefaults(coreOptions, chartOptions);

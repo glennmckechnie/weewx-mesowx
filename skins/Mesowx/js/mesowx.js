@@ -41,7 +41,7 @@ mesowx.Unit = (function() {
         perc : new meso.UnitDef("perc", '%') // percent
     };
 
-    // converstion functions
+    // conversion functions
     Unit.f.convert = to = {};
     to[Unit.c] = function(value) { return 5.0/9.0 * (value-32); };
 
