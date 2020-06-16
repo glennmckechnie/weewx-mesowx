@@ -42,7 +42,7 @@ mesowx.RawChart = (function() {
     RawChart.prototype._buildFetchExtremesQuery = function() {
         var query = _super._buildFetchExtremesQuery.call(this);
         query.start = {
-            value: 86400,
+            value: $data_limit_seconds,
             type: 'ago'
         };
         return query;

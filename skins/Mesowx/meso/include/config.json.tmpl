@@ -116,7 +116,7 @@
                 "trigger" : "update",
                 // The amount of time in seconds since the current date/time to retain. All records
                 // before this time window will be permanently deleted!
-                "windowSize" : 86400 // 24 hours
+                "windowSize" : $data_limit_seconds // 86400 = 24 hours
             },
             "columns" : {
                 "dateTime" :    {"unit" : "s"},
@@ -144,21 +144,21 @@
 also refer to meso/include/Unit.class.php
 
 if 'US' in wee_units:
-     self.degr = 'f'
-     self.press = 'inHg'
-     self.meas = 'in'
-     self.speed = 'mph'
-     self.rainR = 'inHr'
+    self.degr = 'f'
+    self.press = 'inHg'
+    self.meas = 'in'
+    self.speed = 'mph'
+    self.rainR = 'inHr'
 elif 'METRIC' in wee_units:
-     self.degr = 'c'
-     self.press = 'hPa'
-     self.meas = 'cm'
-     self.speed = 'kph'
-     self.rainR = 'cmHr'
+    self.degr = 'c'
+    self.press = 'hPa'
+    self.meas = 'cm'
+    self.speed = 'kph'
+    self.rainR = 'cmHr'
 elif 'METRICWX' in wee_units:
-     self.degr = 'c'
-     self.press = 'hPa'
-     self.meas = 'mm'
-     self.speed = 'mps'
-     self.rainR = 'mmHr'
+    self.degr = 'c'
+    self.press = 'hPa'
+    self.meas = 'mm'
+    self.speed = 'mps'
+    self.rainR = 'mmHr'
 */

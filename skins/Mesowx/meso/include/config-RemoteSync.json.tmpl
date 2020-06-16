@@ -109,25 +109,25 @@
                 "trigger" : "update",
                 // The amount of time in seconds since the current date/time to retain. All records
                 // before this time window will be permanently deleted!
-                "windowSize" : 86400 // 24 hours
+                "windowSize" : $data_limit_seconds // 86400 = 24 hours
             },
             "columns" : {
-                    "dateTime" :    {"unit" : "s"},
-                    "barometer" :   {"unit" : "$press"},
-                    "inTemp" :      {"unit" : "$degr"},
-                    "outTemp" :     {"unit" : "$degr"},
-                    "inHumidity" :  {"unit" : "perc"},
-                    "outHumidity" : {"unit" : "perc"},
-                    "windSpeed" :   {"unit" : "$speed"},
-                    "windDir" :     {"unit" : "deg"},
-                    "rainRate" :    {"unit" : "$rainR"},
-                    "dayRain" :     {"unit" : "$meas"},
-                    "dewpoint" :    {"unit" : "$degr"},
-                    "windchill" :   {"unit" : "$degr"},
-                    "heatindex" :   {"unit" : "$degr"}
+                "dateTime" :    {"unit" : "s"},
+                "barometer" :   {"unit" : "$press"},
+                "inTemp" :      {"unit" : "$degr"},
+                "outTemp" :     {"unit" : "$degr"},
+                "inHumidity" :  {"unit" : "perc"},
+                "outHumidity" : {"unit" : "perc"},
+                "windSpeed" :   {"unit" : "$speed"},
+                "windDir" :     {"unit" : "deg"},
+                "rainRate" :    {"unit" : "$rainR"},
+                "dayRain" :     {"unit" : "$meas"},
+                "dewpoint" :    {"unit" : "$degr"},
+                "windchill" :   {"unit" : "$degr"},
+                "heatindex" :   {"unit" : "$degr"}
             },
             "constraints" : {
-                    "primaryKey" : "dateTime"
+                "primaryKey" : "dateTime"
             }
         }
     }

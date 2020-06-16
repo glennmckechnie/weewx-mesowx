@@ -24,7 +24,7 @@ class MesowxInstaller(ExtensionInstaller):
         raw_key = random_password()
 
         super(MesowxInstaller, self).__init__(
-            version='0.5.2',
+            version='0.5.3',
             name='mesowx',
             description='Weather station console web front-end with'
                         'real-time updating and dynamic charting.',
@@ -43,6 +43,7 @@ class MesowxInstaller(ExtensionInstaller):
                     'Raw': {
                         'data_binding': 'mesowx_binding',
                         'data_limit': '48'},
+                        'skip_loop': '2'},
                     'RemoteSync': {
                         'archive_entity_id': 'weewx_archive',
                         'archive_security_key': arch_key,
@@ -70,7 +71,7 @@ class MesowxInstaller(ExtensionInstaller):
                     'skins/Mesowx/js/MesoWxConsole.js',
                     'skins/Mesowx/js/mesowx.js',
                     'skins/Mesowx/js/MesoWxWindCompass.js',
-                    'skins/Mesowx/js/RawChart.js',
+                    'skins/Mesowx/js/RawChart.js.tmpl',
                     'skins/Mesowx/js/RealTimeChart.js',
                     'skins/Mesowx/js/WindCompass.js',
                     'skins/Mesowx/js/lib/d3.v3.min.js',

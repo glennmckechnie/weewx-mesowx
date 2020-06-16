@@ -83,7 +83,10 @@ The remote server URL obviously needs changing.
 
 The polling interval sets the refresh time in seconds (converted to milliseconds) 60 is the default. I use 20 for the 1-wire setup. It's up to you and your station.
 
-The data_limit is the number of hours of records to keep in the raw database, anything older than that are deleted.
+skip_loop sets the time allowed between loop packets. If you get them every 2 seconds and you want to change that to every 20 seconds, then the 2 becomes 20.
+If you already get them every 20 seconds, then the default value of 2 seconds will have no affect. Leave it or increase it if 20 seconds is still too frequent. It's your choice.
+
+The data_limit is the number of hours of records to keep in the raw database, anything older than that are deleted. It is also used in the 24-hour range. If you opt for 48 then it should display 48 hours of raw records (rather than the default of 24-Hours)
 
 
     # Options for extension 'mesowx'
@@ -99,18 +102,22 @@ The data_limit is the number of hours of records to keep in the raw database, an
         [[Raw]]
             data_binding = mesowx_binding
             data_limit = 48
+            skip_loop = 2
 
 
 ## Local Installation.
 
 The local (Raw) mesowx database will be automatically generated and consists of just the raw (loop) table. The archive (REC) values will be sourced from your existing mysql weewx database.
 
-Once all the mesowx files are generated (at last count there were 49 of them) and transferred to your local web server the [StdReport][[Mesowx]] skin can be disabled by changing the enable = True stanza to...
+Once all the mesowx files are generated (at last count there were 51 of them) and transferred to your local web server the [StdReport][[Mesowx]] skin can be disabled by changing the enable = True stanza to...
 
     enable = False
 
-Why False?
-A working installation does not require that skin to be regenerated, it's a one time requirement; unless you later decide to change any of the [Mesowx] entries in weewx.conf in which case you'll need to renable the skin to allow the config files to be recreated.
+#### Why False?
+
+A working installation does not require that skin to be regenerated, it's a one time requirement.
+
+However, if you later decide to change any of the [Mesowx] entries in weewx.conf, or experiment with the server files (remember the .tmpl files are the source files) then you'll need to renable the skin to allow the config files to be recreated. You can make changes to the webserver files with the skin disabled (enable = False) but those changes run the risk of being overwritten if you forget what you've done (time passes for us all, memories fade!).
 
 ## Remote Installation.
 

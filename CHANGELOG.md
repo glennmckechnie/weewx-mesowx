@@ -1,5 +1,11 @@
 # MesoWx Change Log #
 
+## 0.5.3 (2020-06-16) ##
+
+* add skip_loop as an option to skip loop (raw) records if they come too quickly for your liking
+* allow the 24-Hour display to span a longer range when specified by data_limit, assuming that
+    becomes greater than the default value of 24 hour
+
 ## 0.5.2 (2020-06-15) ##
 
 * Add loop_polling_interval to [Mesowx] section. Default is 60 seconds (converts to
