@@ -139,6 +139,7 @@ mesowx.Config = (function() {
                 //tickInterval: 10,
                 //minorTickInterval: 1,
                 //maxPadding: Y_AXIS_PADDING,
+                opposite: false,
             }
         },
         // barameter axis
@@ -166,7 +167,7 @@ mesowx.Config = (function() {
                 },
                 height : 100,
                 top : 240,
-                offset: 0,
+                offset: 50,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
                 min: 0,
@@ -183,8 +184,8 @@ mesowx.Config = (function() {
                 },
                 height : 100,
                 top : 240,
-                offset: 0,
-                opposite: true,
+                offset: 20,
+                opposite: false,
                 min: 0,
                 max: 360,
                 tickInterval: 90,
@@ -221,7 +222,7 @@ mesowx.Config = (function() {
                 },
                 height : 100,
                 top : 365,
-                offset: 0,
+                offset: 50,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
                 min: 0,
@@ -238,7 +239,7 @@ mesowx.Config = (function() {
                 height : 100,
                 top : 365,
                 offset: 0,
-                opposite: true,
+                opposite: false,
                 min: 0,
                 max: 100,
                 tickInterval: 25,
@@ -674,7 +675,7 @@ mesowx.Config = (function() {
     Config.windCompassOptions = {
         windCompassConfig : {
             containerId: 'compass',
-            maxPrevDirs : 0,
+            maxPrevDirs : 6,
             windDirToCardinalLabelConverterFunction : Config.defaultDegreeToCardinalTextConverter
         },
         realTimeDataProvider : Config.realTimeDataProvider,

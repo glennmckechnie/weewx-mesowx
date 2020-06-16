@@ -7,6 +7,7 @@
   There is a slight change in appearance (the navigator bar for one)
 * add marker symbols etc supplied by user "laki1" back in 2017 ! ...
   https://groups.google.com/d/msg/weewx-user/eAUsTqR8yYQ/qCtf7IGaBwAJ
+* for readability: split labels between left and right sides of charts
 
 ## 0.5.3 (2020-06-16) ##
 
