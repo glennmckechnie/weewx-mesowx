@@ -42,7 +42,7 @@ class MesowxInstaller(ExtensionInstaller):
                     'loop_polling_interval': '60',
                     'Raw': {
                         'data_binding': 'mesowx_binding',
-                        'data_limit': '48'},
+                        'data_limit': '48',
                         'skip_loop': '2'},
                     'RemoteSync': {
                         'archive_entity_id': 'weewx_archive',

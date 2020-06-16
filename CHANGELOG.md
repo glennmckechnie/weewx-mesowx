@@ -2,9 +2,10 @@
 
 ## 0.5.3 (2020-06-16) ##
 
-* add skip_loop as an option to skip loop (raw) records if they come too quickly for your liking
-* allow the 24-Hour display to span a longer range when specified by data_limit, assuming that
+* Add skip_loop as an option to skip loop (raw) records if they come too quickly for your liking
+* Allow the 24-Hour display to span a longer range when specified by data_limit, assuming that
     becomes greater than the default value of 24 hour
+* Set the archive graphs to load 1 months as the default. Faster initial loads
 
 ## 0.5.2 (2020-06-15) ##
 

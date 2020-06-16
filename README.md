@@ -5,6 +5,7 @@ The move to weewx_extension is done, it just needs some beta testing...
 
 More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It's not dead yet (it's just sleeping squire.)
 
+See the CHANGELOG.md for a brief summary of changes.
 
 ----
 
