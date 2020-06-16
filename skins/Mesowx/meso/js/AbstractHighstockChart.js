@@ -3,8 +3,8 @@ var meso = meso || {};
 meso.AbstractHighstockChart = (function() {
 
     var DEFAULT_OPTIONS = {
-        // This defines the groupings that the data is will be potentially grouped into. The interval 
-        // will be chosen dynamically based on the selected range, the available space, and the 
+        // This defines the groupings that the data is will be potentially grouped into. The interval
+        // will be chosen dynamically based on the selected range, the available space, and the
         // groupPixelWidth setting.
         // Note: this uses the same API and defaults as Highstock, see
         // http://api.highcharts.com/highstock#plotOptions.area.dataGrouping.units
@@ -23,7 +23,7 @@ meso.AbstractHighstockChart = (function() {
         // formats, the first defining the format for when the data is either not aggregated
         // or the aggregated interval is 1, the second and third are the beginning and end
         // format when the point is aggregated (other than 1) and will be concatenated together.
-        // Note: this uses the same API and defaults as Highstock, see 
+        // Note: this uses the same API and defaults as Highstock, see
         // http://api.highcharts.com/highstock#plotOptions.series.dataGrouping.dateTimeLabelFormats
         groupDateTimeLabelFormats: {
            millisecond: ['%A, %b %e, %H:%M:%S.%L', '%A, %b %e, %H:%M:%S.%L', '-%H:%M:%S.%L'],
@@ -42,19 +42,19 @@ meso.AbstractHighstockChart = (function() {
         // Note: this is similar to the Highstock setting of the same name
         // http://api.highcharts.com/highstock#plotOptions.area.dataGrouping.groupPixelWidth
         groupPixelWidth: 1.5,
-        // The approximate interval of the actual data in milliseconds. The value doesn't have to be 
-        // exact if the data is irregular, but should be close otherwise it could result in loading 
-        // more data than will fit on the chart, as this controls the point at which data will be 
+        // The approximate interval of the actual data in milliseconds. The value doesn't have to be
+        // exact if the data is irregular, but should be close otherwise it could result in loading
+        // more data than will fit on the chart, as this controls the point at which data will be
         // requested in raw form instead of aggregated (i.e. when the chart has been zoomed
         // in far enough that there are less than two raw data points per group). Setting this
-        // is optional, but if unset the data will never request the data in raw form (i.e. it will 
+        // is optional, but if unset the data will never request the data in raw form (i.e. it will
         // always be aggregated even if each group only consists of an aggregation of 1 row).
         // XXX don't love this solution to this problem, is there a better way?
         dataInterval: null,
-        // The maximum range of the chart that stats will be loaded for in milliseconds. If unspecified/null 
+        // The maximum range of the chart that stats will be loaded for in milliseconds. If unspecified/null
         // there will be no limit. This parameter exists for larger data sets where calculating the stats
         // takes too long to be usable.
-        // XXX don't like this parameter either, caching of stats on the server could help eliminate 
+        // XXX don't like this parameter either, caching of stats on the server could help eliminate
         // the need for this, or perhaps the total number of data points could be calculated ahead of time
         // along with the extremes query?
         maxStatRange: null
@@ -173,7 +173,7 @@ meso.AbstractHighstockChart = (function() {
     AbstractHighstockChart.prototype._buildFetchDataQuery = function(resultCallback, fieldDefs, start, end) {
         var groupParam = null;
         if(this._lazy) {
-            var groupParam = this._buildDataQueryGroupParamForGroupInterval(this._currentGroupingInterval); 
+            var groupParam = this._buildDataQueryGroupParamForGroupInterval(this._currentGroupingInterval);
             // if the chart is lazy, but we're not grouping, add dateTime as the first field
             // this is because the dateTime field is only automatically added when grouping
             if(!groupParam) {
@@ -317,7 +317,7 @@ meso.AbstractHighstockChart = (function() {
         }
     }
 
-    // fetch the min and max datetime for the entire chart, then create the chart with these two points, 
+    // fetch the min and max datetime for the entire chart, then create the chart with these two points,
     // and finally load the default selected range; this prevents the need to load the full chart data
     // initially
     AbstractHighstockChart.prototype._buildFetchExtremesQuery = function() {
@@ -417,7 +417,7 @@ meso.AbstractHighstockChart = (function() {
                 if(!append) {
                     this._chartData[fieldId].push(point);
                 } else {
-                    this.chart.get(fieldId).addPoint(point, 
+                    this.chart.get(fieldId).addPoint(point,
                             false, // don't redraw
                             true,  // shift series data
                             false); // don't animate
@@ -428,12 +428,12 @@ meso.AbstractHighstockChart = (function() {
         if(this._chartInitialized) {
             this._fieldIds.forEach(function(fieldId, index) {
                 this.chart.get(fieldId).setData(
-                        this._chartData[fieldId], 
+                        this._chartData[fieldId],
                         false); // false = don't redraw
             }, this);
             // clear the stats flags - this prevents the chart from not shifting if there are stats flags on the far edge
             // XXX is there a better solution? perhaps just remove the flags on the far edge? or wait to update both the series data and flags at the same time
-            this._clearStatsFlags(); 
+            this._clearStatsFlags();
         }
         // redraw the chart at the end if it has been created
         if(this.chart) {
@@ -486,8 +486,8 @@ meso.AbstractHighstockChart = (function() {
         var min = e.min;
         var max = e.max;
         // XXX not sure if this is highcharts bug or not, but if a zoom selection is made on a chart
-        // where there is no data point or to the edge of the chart, the min/max value could be 
-        // undefined. so for now if this occurs, just default to the values to the current extreme 
+        // where there is no data point or to the edge of the chart, the min/max value could be
+        // undefined. so for now if this occurs, just default to the values to the current extreme
         // values of the axis. this could be fixed in a future Highcharts version making this unecessary
         if(typeof min === 'undefined') {
             min = this.getXAxisExtremes().min;
@@ -506,14 +506,14 @@ meso.AbstractHighstockChart = (function() {
         // TODO implement stats calculation client-side for non-lazy charts, until then always load lazily
         this._loadStatsDataLazy(min, max);
     };
-    
+
     AbstractHighstockChart.prototype._loadStatsDataLazy = function(min, max) {
         // don't load the stats if the range exceeds the max
         if(this._maxStatRange && (max - min) > this._maxStatRange) {
             return;
         }
         var startRange = this.currentDataRange;
-        // wrap the handler to create a closure around the current data range to make sure that the rnage 
+        // wrap the handler to create a closure around the current data range to make sure that the range
         // hadn't changed in the time that it took for the stats to return; if this does occur, simply
         // ignore it
         var handleStatsLoadWrapper = function(data) {
@@ -557,7 +557,7 @@ meso.AbstractHighstockChart = (function() {
     AbstractHighstockChart.prototype._handleStatsLoad = function(data) {
         // hate doing this, but there's a race condition when the selected range is changed between
         // the main chart data and stats data updating the chart - if the stats data is loaded first,
-        // it won't display the flags. this queues up the stats flag update until the main chart data 
+        // it won't display the flags. this queues up the stats flag update until the main chart data
         // has been loaded
         if(this._dataLoading) {
             this._runAfterDataLoaded(meso.Util.bind(this, function() {
@@ -639,6 +639,8 @@ meso.AbstractHighstockChart = (function() {
         if(this._lazy) {
             chartOptions.tooltip = {
                 useHTML : true,
+                //borderRadius: 0,
+                //borderWidth: 0,
                 formatter: this._createTooltipFormatter()
             };
         };
@@ -675,7 +677,7 @@ meso.AbstractHighstockChart = (function() {
         chartOptions.series = [];
 
         this.options.yAxes.forEach(function(axisDef, axisIndex) {
-            
+
             var axisId = axisDef.axisId;
             if( !axisId ) {
                 throw new Error("Axis at index "+axisIndex+" has no 'axisId' defined");
@@ -742,6 +744,7 @@ meso.AbstractHighstockChart = (function() {
     */
     AbstractHighstockChart.prototype._createTooltipFormatter = function() {
         var self = this;
+        var symbol;
         return function() {
             // flags
             if(this.point && this.series.options.type == 'flags') {
@@ -766,8 +769,25 @@ meso.AbstractHighstockChart = (function() {
                 }
                 s += '<table>';
                 this.points.forEach(function(point, index) {
-                    s += '<tr><td style="color:' + point.series.color + '">' + point.series.name + '</td>' + 
-                         '<td><b>' + point.y + '</b><small>' + point.series.tooltipOptions.valueSuffix + '</small></td></tr>';
+                  switch ( point.series.symbol ) {
+                    case 'circle':
+                      symbol = '&#9679';
+                      break;
+                   case 'diamond':
+                     symbol = '&#9670';
+                     break;
+                   case 'square':
+                     symbol = '&#9632';
+                     break;
+                   case 'triangle':
+                     symbol = '&#9650';
+                     break;
+                   case 'triangle-down':
+                     symbol = '&#9660';
+                     break;
+        }
+                   s += '<tr><td style="color:' + point.series.color + '">' + symbol + ' ' + point.series.name + '</td>' +
+                       '<td><b>' + point.y + '</b><small>' + point.series.tooltipOptions.valueSuffix + '</small></td></tr>';
                 });
                 s += '</table>';
                 return s;
