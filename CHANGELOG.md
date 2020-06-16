@@ -1,5 +1,13 @@
 # MesoWx Change Log #
 
+## 0.6.0 (2020-06-16) ##
+
+* update to d3-v3.5.17.min.js (last of the v3 line) : highstock-v8.1.1.js : jquery-3.5.1.min.js libraries
+  This gives better reloads for the local version, it was stalling on the archive page for me
+  There is a slight change in appearance (the navigator bar for one)
+* add marker symbols etc supplied by user "laki1" back in 2017 ! ...
+  https://groups.google.com/d/msg/weewx-user/eAUsTqR8yYQ/qCtf7IGaBwAJ
+
 ## 0.5.3 (2020-06-16) ##
 
 * Add skip_loop as an option to skip loop (raw) records if they come too quickly for your liking
