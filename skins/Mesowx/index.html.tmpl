@@ -13,28 +13,39 @@
 
         <link rel="stylesheet" type="text/css" href="style/mesowx.css"/>
 
-        <script type="text/javascript" src="js/lib/jquery-3.5.1.min.js"></script>
-        <script type="text/javascript" src="js/lib/d3-v3.5.17.min.js"></script>
-        <script type="text/javascript" src="js/lib/highstock-v8.1.1.js"></script>
-        <script type="text/javascript" src="meso/js/meso.js"></script>
-        <script type="text/javascript" src="js/mesowx.js"></script>
-        <script type="text/javascript" src="meso/js/ChangeIndicatedValue.js"></script>
-        <script type="text/javascript" src="js/WindCompass.js"></script>
-        <script type="text/javascript" src="meso/js/AggregateDataProvider.js"></script>
-        <script type="text/javascript" src="meso/js/AbstractRealTimeRawDataProvider.js"></script>
-        <script type="text/javascript" src="meso/js/PollingRealTimeRawDataProvider.js"></script>
-        <script type="text/javascript" src="meso/js/StatsDataProvider.js"></script>
-        <script type="text/javascript" src="meso/js/AbstractHighstockChart.js"></script>
-        <script type="text/javascript" src="meso/js/MesoConsole.js"></script>
-        <script type="text/javascript" src="js/MesoWxConsole.js"></script>
-        <script type="text/javascript" src="js/MesoWxWindCompass.js"></script>
-        <script type="text/javascript" src="js/RawChart.js"></script>
-        <script type="text/javascript" src="js/ArchiveChart.js"></script>
-        <script type="text/javascript" src="js/RealTimeChart.js"></script>
-        <script type="text/javascript" src="js/Config.js"></script>
-        <script type="text/javascript" src="js/MesoWxApp.js"></script>
+        <script src="js/lib/jquery-3.5.1.min.js"></script>
+        <script src="js/lib/d3-v3.5.17.min.js"></script>
+        <script src="js/lib/highstock-v8.1.1.js"></script>
+        <script src="meso/js/meso.js"></script>
+        <script src="js/mesowx.js"></script>
+        <script src="meso/js/ChangeIndicatedValue.js"></script>
+        <script src="js/WindCompass.js"></script>
+        <script src="meso/js/AggregateDataProvider.js"></script>
+        <script src="meso/js/AbstractRealTimeRawDataProvider.js"></script>
+        <script src="meso/js/PollingRealTimeRawDataProvider.js"></script>
+        <script src="meso/js/StatsDataProvider.js"></script>
+        <script src="meso/js/AbstractHighstockChart.js"></script>
+        <script src="meso/js/MesoConsole.js"></script>
+        <script src="js/MesoWxConsole.js"></script>
+        <script src="js/MesoWxWindCompass.js"></script>
+        <script src="js/RawChart.js"></script>
+        <script src="js/ArchiveChart.js"></script>
+        <script src="js/RealTimeChart.js"></script>
+        <script src="js/Config.js"></script>
+        <script src="js/MesoWxApp.js"></script>
+        <script >
+        #raw
+            //refresh page on browser resize. Required for winddir compass
+            $(window).bind('resize', function(e)
+            {
+            console.log('window resized..');
+            this.location.reload(true); /* false to get page from cache */
+            /* true to fetch page from server */
+           });
+        #end raw
+        </script>
 
-        <script type="text/javascript">
+        <script
         #raw
             $(function() {new mesowx.MesoWxApp(mesowx.Config).start();});
         #end raw
@@ -42,28 +53,28 @@
 
     </head>
     <body>
-        <div id="mesowx-console" class="wx-console console-vertical" id="wx-console-vertical">
+        <div id="mesowx-console" class="wx-console console-vertical">
             <div class="outTemp-group reading-group">
-                <div><span class="outTemp-value reading-value"></span><span class="outTemp-unit unit-label"></span></div>
-                <div class="feels-like-container">feels like <span class="heatindex-value feels-like-value reading-value"></span><span class="windchill-value feels-like-value reading-value"></span><span class="windchill-unit unit-label"></span></div>
-                <span class="desc">temperature<span>
+                <div><span class="outTemp-value reading-value"></span> <span class="outTemp-unit unit-label"></span></div>
+                <div class="feels-like-container">feels like <span class="heatindex-value feels-like-value reading-value"></span><span class="windchill-value feels-like-value reading-value"></span> <span class="windchill-unit unit-label"></span></div>
+                <span class="desc">temperature</span>
             </div>
             <div class="dewpoint-group reading-group">
-                <span class="dewpoint-value reading-value"></span><span class="dewpoint-unit unit-label"></span>
-                <span class="desc">dewpoint<span>
+                <span class="dewpoint-value reading-value"></span> <span class="dewpoint-unit unit-label"></span>
+                <span class="desc">dewpoint</span>
             </div>
             <div class="wind-group reading-group">
-                <!--span class="windSpeed-value reading-value"></span><span class="windSpeed-unit unit-label"></span>
+                <!--span class="windSpeed-value reading-value"></span> <span class="windSpeed-unit unit-label"></span>
                 <span class="windDir-value reading-value"></span-->
                 <div id="compass" class="compass"></div>
                 <span class="desc">wind</span>
             </div>
             <div class="out-hum-group reading-group">
-                <span class="outHumidity-value reading-value"></span><span class="outHumidity-unit unit-label"></span>
+                <span class="outHumidity-value reading-value"></span> <span class="outHumidity-unit unit-label"></span>
                 <span class="desc">humidity</span>
             </div>
             <div class="bar-group reading-group">
-                <span class="barometer-value reading-value"></span><span class="barometer-unit unit-label"></span>
+                <span class="barometer-value reading-value"></span> <span class="barometer-unit unit-label"></span>
                 <span class="desc">pressure</span>
             </div>
             <div class="rain-group reading-group">
@@ -75,22 +86,26 @@
                     simply comment out the following line and remove the comments around the commented two
                     lines below it.
                 -->
-                <span class="rainRate-value reading-value"></span><span class="rainRate-unit unit-label"></span>
+                <span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span>
                 <!--
-                <span class="dayRain-value reading-value"></span><span class="dayRain-unit unit-label"></span> 
-                <div class="rainRate-container"><span class="rainRate-value reading-value"></span><span class="rainRate-unit unit-label"></span></div>
+                <span class="dayRain-value reading-value"></span> <span class="dayRain-unit unit-label"></span> 
+                <div class="rainRate-container"><span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span></div>
                 -->
                 <span class="desc">rain</span>
             </div>
-            <div class="last-update"><span class="dateTime-value"></span></div>
+            <div class="last-update"> <span class="dateTime-value"></span></div>
         </div>
-        #include "links.inc"
         <div id="charts-container"></div>
         <div id="chart-selector">
             <a id="real-time-selector" href="#">Real-time</a>
             <a id="today-selector" href="#">$data_limit-hours</a>
             <a id="archive-selector" href="#">Archive</a>
         </div>
-        #include "footnote.inc"
+        <div id="link-selector">
+            #include "links.inc"
+        </div>
+        <div id="github-selector">
+            #include "footnote.inc"
+        </div>
     </body>
 </html>

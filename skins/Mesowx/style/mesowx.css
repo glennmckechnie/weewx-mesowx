@@ -13,10 +13,10 @@ body {
 #charts-container {
     position: absolute;
     top: 0;
-    left: 170px;
+    left: 7%;
     right: 0px;
     margin: 0 20px;
-    height: 600px;
+    height: 93%;
 }
 /*.chart-container {
     height: 580px;
@@ -27,28 +27,53 @@ body {
     right: 0;
 }*/
 #chart-selector {
+    float:left;
     position: absolute;
-    top: 600px;
-    left: 190px;
+    top: 93%;
+    left: 15%;
+    font-size: 0.8em;
+}
+#github-selector {
+    clear: right;
+    position: absolute;
+    top: 96%;
+    font-size: 0.8em;
+    font-style: italic;
+}
+#link-selector {
+    float:right;
+    position: absolute;
+    top: 93%;
+    right: 15%;
+    font-size: 0.8em;
 }
 
 
 /* 
    console 
  */
+.wx-console .console-vertical {
+    padding: 10px;
+    color: #616161;
+    font-family: Verdana, Geneva, sans-serif;
+    width: 7%;
+    /*width: 170px;*/
+}
 .wx-console {
     padding: 10px;
     color: #616161;
     font-family: Verdana, Geneva, sans-serif;
 }
 .console-vertical {
-    width: 170px;
+    width: 7%;
+    /*width: 170px;*/
 }
 .console-horizontal {
     overflow: hidden; /* this clears the float */
 }
 .reading-group {
-    text-align: right;
+    font-size: 1.0vw;
+    text-align: center;
     background-color: #eee;
     border-radius: .8em;
     padding: .5em;
@@ -59,10 +84,14 @@ body {
 .console-horizontal .reading-group {
     margin-right: .4em;
     float: left;
-    width: 150px;
+    width: 10%;
 }
 .reading-value {
-    font-size: 1.7em;
+    font-size: 1.0vw;
+    font-weight: bold;
+}
+.smallread-value {
+    font-size: 0.8vw;
     font-weight: bold;
 }
 .value-up {
@@ -90,7 +119,7 @@ body {
     75% { color: #E00000; }
 }
 .outTemp-value {
-    font-size: 2.1em;
+    font-size: 1.6vw;
     line-height: .8em;
 }
 .feels-like-container {
@@ -105,7 +134,7 @@ body {
     opacity: 1;
 }
 .feels-like-value {
-    font-size: 1em;
+    font-size: 0.8vw;
 }
 .rainRate-container {
     line-height: 0;
@@ -119,25 +148,25 @@ body {
     opacity: 1;
 }
 .rainRate-container .rainRate-value {
-    font-size: 1.1em;
+    font-size: 0.8vw;
 }
 .last-update {
     margin-top: 2em;
-    font-size: .6em;
+    font-size: 0.8vw;
     font-style: italic;
     text-align: left;
 }
 .last-update-value {
-    font-size: 1em;
+    font-size: 0.8vw;
     font-weight: normal;
 }
 .desc {
     display: block;
     color: #adadad;
     font-style: italic;
-    font-size: .8em;
+    font-size: .8vw;
     margin-top: .2em;
-    text-align: left;
+    /*text-align: left;*/
     margin-left: .5em;
     /*border-top: 1px solid #c7c7c7;*/
 }
@@ -179,28 +208,28 @@ body {
 }
 .compass .speedDisplay {
     font-weight: bold;
-    font-size: 3em;
+    font-size: 3vw;
     kerning: .03em;
     alignment-baseline: central;
     text-anchor: middle;
 }
 .compass .speedSuffix {
-    font-size: .3em;
+    font-size: 1.0vw;
 }
 .compass .ordinalDisplay {
-    font-size: 1.5em;
+    font-size: 1.5vw;
     font-weight: bold;
     text-anchor: middle;
-    baseline-shift: 10%;
+    /*baseline-shift: 10%;*/
 }
 
 /*
 additions
 */
 
-.footnote {
+/*.footnote {
     font-size: 80%;
     font-style: italic;
     clear: both;
     padding-left: 20px;
-}
+}*/

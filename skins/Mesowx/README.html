@@ -1,7 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html  lang="en">
 <head>
     <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css" rel="stylesheet">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" type="text/css" href="style/mesowx.css"/>
+    <title>Mesowx README.md</title>
+
     <style>
         body {
             font-family: sans-serif;
@@ -27,6 +31,7 @@
 <p>More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It&rsquo;s not dead yet (it&rsquo;s just sleeping squire.)</p>
 <p><strong> It&rsquo;s still June 2020 </strong></p>
 <p>Updated the d3, jquery, and highstock libraries. Released as <a href="https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.0">version 0.6.0</a></p>
+<p>Adjust css, index.html, and Config.js to improve screen usage and allow dynamic rescaling.</p>
 <p>See the CHANGELOG.md for a brief summary of changes.</p>
 <hr>
 <h1><a href="https://github.com/glennmckechnie/weewx-mesowx">WeeWX-MesoWx</a></h1>
@@ -176,7 +181,7 @@ As of version 0.5.1 the installer will adjust the units it can according to the 
 <pre><code>             (ie: excluding the above modifications).
 </code></pre>
 <p>A quick test of the configuration is to point the browser to the remote site using&hellip;</p>
-<p>http://<your_site>/weewx/mesowx/meso/data.php?entity_id=weewx_archive&amp;data=dateTime&amp;order=desc&amp;limit=1</p>
+<p>http://&rdquo;your_site&rdquo;/weewx/mesowx/meso/data.php?entity_id=weewx_archive&amp;data=dateTime&amp;order=desc&amp;limit=1</p>
 <p>and a date should be returned if the database has something&hellip;</p>
 <pre><code>   [[1592045160]]
 </code></pre>
@@ -349,8 +354,8 @@ mysql&gt; create database mesowx;
 <p>Grant full access to your remote database (if you are using a remote database setup, which will be with sync.py):</p>
 <pre><code>mysql&gt; GRANT select, update, create, delete, insert ON mesowx.* TO mesowx@localhost;
 </code></pre>
-<p>Grant read only access to your local database (note: only needed for shared database setup, replace <DATABASE> with your database name. raw.py will be the script used here):</p>
-<pre><code>mysql&gt; GRANT select ON &lt;DATABASE&gt;.* TO mesowx@localhost;
+<p>Grant read only access to your local database (note: only needed for shared database setup, replace &ldquo;DATABASE&rdquo; with your database name. raw.py will be the script used here):</p>
+<pre><code>mysql&gt; GRANT select ON "DATABASE".* TO mesowx@localhost;
 </code></pre>
 <h1>Install MesoWx</h1>
 <ol>

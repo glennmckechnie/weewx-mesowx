@@ -41,7 +41,7 @@ from weewx.engine import StdService
 from weewx.cheetahgenerator import SearchList
 import weeutil.weeutil
 
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger

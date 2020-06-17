@@ -9,6 +9,8 @@ More could be done with this skin and with support and contributions from the co
 
 Updated the d3, jquery, and highstock libraries. Released as [version 0.6.0](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.0)
 
+Adjust css, index.html, and Config.js to improve screen usage and allow dynamic rescaling.
+
 See the CHANGELOG.md for a brief summary of changes.
 
 ----
@@ -223,7 +225,7 @@ Take a backup (as you always do ?) and use a lot of care.
 
 A quick test of the configuration is to point the browser to the remote site using...
 
-http://<your_site>/weewx/mesowx/meso/data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
+http://"your_site"/weewx/mesowx/meso/data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
 
 and a date should be returned if the database has something...
 
@@ -447,9 +449,9 @@ Grant full access to your remote database (if you are using a remote database se
 
     mysql> GRANT select, update, create, delete, insert ON mesowx.* TO mesowx@localhost;
 
-Grant read only access to your local database (note: only needed for shared database setup, replace <DATABASE> with your database name. raw.py will be the script used here):
+Grant read only access to your local database (note: only needed for shared database setup, replace "DATABASE" with your database name. raw.py will be the script used here):
 
-    mysql> GRANT select ON <DATABASE>.* TO mesowx@localhost;
+    mysql> GRANT select ON "DATABASE".* TO mesowx@localhost;
 
 # Install MesoWx
 

@@ -132,7 +132,8 @@ mesowx.Config = (function() {
                 title: {
                     text: 'Temperature'
                 },
-                height : 180,
+                height : 50+'%',
+                offset: -10,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
                 //endOnTick: false,
@@ -150,8 +151,8 @@ mesowx.Config = (function() {
                 title: {
                     text: 'Barometer'
                 },
-                height : 180,
-                offset: 0,
+                height : 50+'%',
+                offset: -12,
                 opposite: true,
                 //endOnTick: false,
                 //maxPadding: Y_AXIS_PADDING,
@@ -165,8 +166,8 @@ mesowx.Config = (function() {
                 title: {
                     text: 'Wind'
                 },
-                height : 100,
-                top : 240,
+                height : 23+'%',
+                top : 51+'%',
                 offset: 50,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
@@ -182,12 +183,12 @@ mesowx.Config = (function() {
                 title: {
                     text: 'Wind Dir'
                 },
-                height : 100,
-                top : 240,
-                offset: 20,
+                height : 23+'%',
+                top : 51+'%',
+                offset: 30,
                 opposite: false,
                 min: 0,
-                max: 360,
+                max: 58+'%',
                 tickInterval: 90,
                 labels: {
                     formatter: function() {
@@ -204,8 +205,8 @@ mesowx.Config = (function() {
                 title: {
                     //text: 'Rain'
                 },
-                height : 100,
-                top : 365,
+                height : 25+'%',
+                top : 75+'%',
                 offset: -40,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
@@ -220,8 +221,8 @@ mesowx.Config = (function() {
                 title: {
                     text: 'Rain'
                 },
-                height : 100,
-                top : 365,
+                height : 25+'%',
+                top : 75+'%',
                 offset: 50,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
@@ -236,9 +237,9 @@ mesowx.Config = (function() {
                 title: {
                     text: 'Humidity'
                 },
-                height : 100,
-                top : 365,
-                offset: 0,
+                height : 25+'%',
+                top : 75+'%',
+                offset: -10,
                 opposite: false,
                 min: 0,
                 max: 100,

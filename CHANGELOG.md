@@ -1,5 +1,10 @@
 # MesoWx Change Log #
 
+## 0.6.1 (2020-06-17) ##
+
+* modify css, index.html, and Config.js files to allow for dynamic resizing and better use of screen space.
+    Scales well under Opera, Firefox, Chrome and a Samsung phone. Trust that it works for others as well!
+
 ## 0.6.0 (2020-06-16) ##
 
 * update to d3-v3.5.17.min.js (last of the v3 line) : highstock-v8.1.1.js : jquery-3.5.1.min.js libraries
