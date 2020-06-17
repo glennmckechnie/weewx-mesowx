@@ -7,7 +7,7 @@ More could be done with this skin and with support and contributions from the co
 
 **It's still June 2020**
 
-Updated the d3, jquery, and highstock libraries. Released as [version 0.6.0](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.0)
+Updated the d3, jquery, and highstock libraries. Released as [version 0.6.1](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.1)
 
 Adjust css, index.html, and Config.js to improve screen usage and allow dynamic rescaling.
 
