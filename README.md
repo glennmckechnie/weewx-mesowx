@@ -28,7 +28,7 @@ MesoWx is a real-time HTML front-end for visualizing personal weather station da
 
 MesoWx displays data from a database and does not itself interface with any weather station hardware directly, however, being built upon Meso it supports an HTTP API for remotely adding data, which allows integration with existing weather station software. MesoWx integrates well with Weewx and should support any weather station that it supports.
 
-![v0.6.0-1month-archive](lirpa/images/v0.6.0-1month-archive.png)
+![v0.6.0-1month-archive](lirpa/images/v0.6.2-1month-archive.png)
 ![Samsung-landscape.png](lirpa/images/Samsung-landscape.png)
 
 **June 2020:** Time has passed and there are many more excellent and capable skins available for weewx now. They have evolved with the community and are not only well integrated with weewx but feature packed. This one lacks the bells and whistles but is still quite capable at conveying the collected information, thanks to highcharts, decent hardware :-) and access to the whole database.
