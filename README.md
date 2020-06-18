@@ -5,7 +5,7 @@ The move to weewx_extension is done, it just needs some beta testing...
 
 More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It's not dead yet (it's just sleeping squire.)
 
-** It's still June 2020 **
+**It's still June 2020**
 
 Updated the d3, jquery, and highstock libraries. Released as [version 0.6.2](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.2)
 
