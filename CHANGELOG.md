@@ -1,5 +1,10 @@
 # MesoWx Change Log #
 
+## 0.6.2 (2020-06-18) ##
+
+* Add colors to skin.conf, match them to Config.js
+* Update old highcharts options to match 8.1.1, or close enough too.
+
 ## 0.6.1 (2020-06-17) ##
 
 * modify css, index.html, and Config.js files to allow for dynamic resizing and better use of screen space.

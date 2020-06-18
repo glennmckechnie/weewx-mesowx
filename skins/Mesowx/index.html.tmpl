@@ -12,6 +12,7 @@
         <title>$station.location : Real-Time</title>
 
         <link rel="stylesheet" type="text/css" href="style/mesowx.css"/>
+        <link rel="icon" type="image/png" href="../images/favicon.ico" />
 
         <script src="js/lib/jquery-3.5.1.min.js"></script>
         <script src="js/lib/d3-v3.5.17.min.js"></script>
@@ -33,7 +34,7 @@
         <script src="js/RealTimeChart.js"></script>
         <script src="js/Config.js"></script>
         <script src="js/MesoWxApp.js"></script>
-        <script >
+        <script>
         #raw
             //refresh page on browser resize. Required for winddir compass
             $(window).bind('resize', function(e)
@@ -45,7 +46,7 @@
         #end raw
         </script>
 
-        <script
+        <script>
         #raw
             $(function() {new mesowx.MesoWxApp(mesowx.Config).start();});
         #end raw

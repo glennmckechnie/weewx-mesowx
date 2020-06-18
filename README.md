@@ -7,9 +7,12 @@ More could be done with this skin and with support and contributions from the co
 
 ** It's still June 2020 **
 
-Updated the d3, jquery, and highstock libraries. Released as [version 0.6.0](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.0)
+Updated the d3, jquery, and highstock libraries. Released as [version 0.6.2](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.2)
 
 Adjust css, index.html, and Config.js to improve screen usage and allow dynamic rescaling.
+
+Add colors to sink.conf, match them to Config.js and update highcharts options to match 8.1.1
+
 
 See the CHANGELOG.md for a brief summary of changes.
 

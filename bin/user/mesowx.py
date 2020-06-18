@@ -41,7 +41,7 @@ from weewx.engine import StdService
 from weewx.cheetahgenerator import SearchList
 import weeutil.weeutil
 
-VERSION = "0.6.1"
+VERSION = "0.6.2"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -1174,6 +1174,42 @@ class Mesowx(SearchList):
                        'loop_polling_interval', '60')) * 1000
         wee_units = self.generator.config_dict['StdConvert'].get(
                          'target_unit', 'METRICWX')
+
+        # surely there is an easier way?
+        chart_colors = self.generator.skin_dict.get('ChartColors',{})
+        #loginf("Chart Colors are %s" % chart_colors)
+        for _k, _i in chart_colors.items():
+            if "out_temp" in _k:
+                self.out_temp = _i
+            elif "bar_ometer" in _k:
+                self.bar_ometer = _i
+            elif "wind_speed" in _k:
+                self.wind_speed = _i
+            elif "wind_dir" in _k:
+                self.wind_dir = _i
+            elif "r_ain" in _k:
+                self.r_ain = _i
+            elif "rain_rate" in _k:
+                self.rain_rate = _i
+            elif "out_humidity" in _k:
+                self.out_humidity = _i
+            elif "in_temp" in _k:
+                self.in_temp = _i
+            elif "dew_point" in _k:
+                self.dew_point = _i
+            elif "wind_chill" in _k:
+                self.wind_chill = _i
+            elif "heat_index" in _k:
+                self.heat_index = _i
+            elif "wind_gustdir" in _k:
+                self.wind_gustdir = _i
+            elif "wind_gust" in _k:
+                self.wind_gust = _i
+            elif "day_rain" in _k:
+                self.day_rain = _i
+            elif "in_humidity" in _k:
+                self.in_humidity = _i
+        #loginf("in_humidity is %s" % self.in_humidity)
 
         # single digit entries (p_f, m_f) are decimal place format instructions
         if 'US' in wee_units:

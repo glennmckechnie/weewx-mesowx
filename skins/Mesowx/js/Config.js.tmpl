@@ -49,7 +49,7 @@ mesowx.Config = (function() {
         "0"   : "N",
         "90"  : "E",
         "180" : "S",
-        "270" : "W"
+        "270" : "W",
     };
 
     // The cardinal direction labels in order starting at 0 degrees, assumes equal separation between ordinals
@@ -130,66 +130,73 @@ mesowx.Config = (function() {
             unit : Config.fieldDefaults.outTemp.unit,
             highstockAxisOptions : {
                 title: {
-                    text: 'Temperature'
+                    text: 'Temperature',
+                    style: {
+                           color: '$out_temp',
+                           fontWeight: 'bold'
+                    }
                 },
+                opposite: false,
+                offset: 10,
                 height : 50+'%',
-                offset: -10,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
-                //endOnTick: false,
-                //tickInterval: 10,
-                //minorTickInterval: 1,
-                //maxPadding: Y_AXIS_PADDING,
-                opposite: false,
             }
         },
-        // barameter axis
+        // barometer axis
         "barometer" : {
             axisId : "barometerAxis",
             unit : Config.fieldDefaults.barometer.unit,
             highstockAxisOptions : {
                 title: {
-                    text: 'Barometer'
+                    text: 'Barometer',
+                    style: {
+                           color: '$bar_ometer',
+                           fontWeight: 'bold'
+                    }
                 },
+                offset: 0,
                 height : 50+'%',
-                offset: -12,
-                opposite: true,
-                //endOnTick: false,
-                //maxPadding: Y_AXIS_PADDING,
             },
         },
         // wind speed axis
-        "windSpeed" : {
+        "windspeed" : {
             axisId : "windSpeedAxis",
             unit : Config.fieldDefaults.windSpeed.unit,
             highstockAxisOptions : {
                 title: {
-                    text: 'Wind'
+                    text: 'Wind',
+                    style: {
+                           color: '$wind_speed',
+                           fontWeight: 'bold'
+                    }
                 },
+                offset: 40,
                 height : 23+'%',
                 top : 51+'%',
-                offset: 50,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
                 min: 0,
-                maxPadding: 0
+                maxPadding: 0,
             },
         },
         // wind dir axis
-        "windDir" : {
+        "winddir" : {
             axisId : "windDirAxis",
             unit : Config.fieldDefaults.windDir.unit,
             highstockAxisOptions : {
                 title: {
-                    text: 'Wind Dir'
+                    text: 'Wind Dir',
+                    style: {
+                           color: '$wind_dir',
+                           fontWeight: 'bold'
+                    }
                 },
+                offset: 20,
+                opposite: false,
                 height : 23+'%',
                 top : 51+'%',
-                offset: 30,
-                opposite: false,
                 min: 0,
-                max: 58+'%',
-                tickInterval: 90,
                 labels: {
                     formatter: function() {
                         return Config.degreeOrdinalLabels[this.value.toString()];
@@ -203,27 +210,35 @@ mesowx.Config = (function() {
             unit : Config.fieldDefaults.rain.unit,
             highstockAxisOptions : {
                 title: {
-                    //text: 'Rain'
+                    text: 'Rain',
+                    style: {
+                           color: '$r_ain',
+                           fontWeight: 'bold'
+                    }
                 },
+                offset: 50,
                 height : 25+'%',
                 top : 75+'%',
-                offset: -40,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
                 min: 0,
             },
         },
         // rain rate axis
-        "rainRate" : {
+        "rainrate" : {
             axisId : "rainRateAxis",
             unit : Config.fieldDefaults.rainRate.unit,
             highstockAxisOptions : {
-                title: {
-                    text: 'Rain'
-                },
+                //title: {
+                //    text: 'Rain Rate',
+                //    style: {
+                //           color: '$rain_rate',
+                //           fontWeight: 'bold'
+                //    }
+                //},
+                offset: -100,
                 height : 25+'%',
                 top : 75+'%',
-                offset: 50,
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
                 min: 0,
@@ -235,12 +250,16 @@ mesowx.Config = (function() {
             unit : Config.fieldDefaults.outHumidity.unit,
             highstockAxisOptions : {
                 title: {
-                    text: 'Humidity'
+                    text: 'Humidity',
+                    style: {
+                           color: '$out_humidity',
+                           fontWeight: 'bold'
+                    }
                 },
+                offset: 10,
+                opposite: false,
                 height : 25+'%',
                 top : 75+'%',
-                offset: -10,
-                opposite: false,
                 min: 0,
                 max: 100,
                 tickInterval: 25,
@@ -259,6 +278,8 @@ mesowx.Config = (function() {
             axis : 'tempAxis',
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$out_temp',
+                lineWidth: 1,
                 zIndex: 0, // so it's above wind chill & heat index
             },
             statsFlagsHighstockSeriesOptions : {
@@ -271,6 +292,7 @@ mesowx.Config = (function() {
             axis : 'tempAxis',
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$in_temp',
                 visible: false // default to hidden state
             }
         },
@@ -280,6 +302,8 @@ mesowx.Config = (function() {
             axis : 'tempAxis',
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$dew_point',
+                visible: false, // default to hidden state
             }
         },
         // wind chill
@@ -288,6 +312,8 @@ mesowx.Config = (function() {
             axis : 'tempAxis',
             stats : [meso.Stat.min],
             highstockSeriesOptions : {
+                color: '$wind_chill',
+                visible: false, // default to hidden state
                 dashStyle: 'ShortDashDot',
                 zIndex: -5 // so it's underneath out temp
             }
@@ -298,6 +324,7 @@ mesowx.Config = (function() {
             axis : 'tempAxis',
             stats : [meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$heat_index',
                 dashStyle: 'ShortDashDot',
                 zIndex: -5 // so it's underneath out temp
             }
@@ -308,7 +335,7 @@ mesowx.Config = (function() {
             axis : 'barometerAxis',
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
-                color: '#BECC00',
+                color: '$bar_ometer',
                 dashStyle: 'ShortDot',
             }
         },
@@ -318,6 +345,7 @@ mesowx.Config = (function() {
             axis : 'windSpeedAxis',
             stats : [meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$wind_speed'
             }
         },
         // wind dir
@@ -325,11 +353,7 @@ mesowx.Config = (function() {
             fieldDef : Config.fieldDefaults.windDir,
             axis : 'windDirAxis',
             highstockSeriesOptions : {
-                lineWidth: 0,
-                marker: {
-                    enabled: true,
-                    radius: 1
-                },
+                color: '$wind_dir'
             }
         },
         // wind gust speed
@@ -338,6 +362,9 @@ mesowx.Config = (function() {
             axis : 'windSpeedAxis',
             stats : [meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$wind_gust',
+                //lineWidth: 0 // will appear on mouse hover
+                visible: false // default to hidden state
             }
         },
         // wind gust dir
@@ -345,11 +372,9 @@ mesowx.Config = (function() {
             fieldDef : Config.fieldDefaults.windGustDir,
             axis : 'windDirAxis',
             highstockSeriesOptions : {
-                lineWidth: 0,
-                marker: {
-                    enabled: true,
-                    radius: 1
-                },
+                color: '$wind_gustdir',
+                dashStyle: 'ShortDashDot',
+                visible: false // default to hidden state
             }
         },
         // day rain
@@ -357,6 +382,7 @@ mesowx.Config = (function() {
             fieldDef : Config.fieldDefaults.dayRain,
             axis : 'rainAxis',
             highstockSeriesOptions : {
+                color: '$day_rain'
             }
         },
         // rain
@@ -365,6 +391,8 @@ mesowx.Config = (function() {
             axis : 'rainAxis',
             highstockSeriesOptions : {
                 type : 'column',
+                width: '1',
+                color: '$r_ain'
             }
         },
         // rain rate
@@ -373,6 +401,9 @@ mesowx.Config = (function() {
             axis : 'rainRateAxis',
             stats : [meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$rain_rate',
+                //lineWidth: 0 // will appear on mouse hover
+                visible: false // default to hidden state
             }
         },
         // out humidity
@@ -381,6 +412,7 @@ mesowx.Config = (function() {
             axis : 'humidityAxis',
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$out_humidity'
             }
         },
         // in humidity
@@ -389,6 +421,7 @@ mesowx.Config = (function() {
             axis : 'humidityAxis',
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
+                color: '$in_humidity',
                 visible: false // default to hidden state
             }
         }
@@ -410,14 +443,14 @@ mesowx.Config = (function() {
         yAxes : [
             Config.chartDefaults.yAxes.temp,
             Config.chartDefaults.yAxes.barometer,
-            Config.chartDefaults.yAxes.windSpeed,
-            Config.chartDefaults.yAxes.windDir,
+            Config.chartDefaults.yAxes.windspeed,
+            Config.chartDefaults.yAxes.winddir,
             // Uncomment the following line and the dayRain series below if you have a Davis station and want to display it
             //Config.chartDefaults.yAxes.rain,
-            Config.chartDefaults.yAxes.rainRate,
+            Config.chartDefaults.yAxes.rainrate,
             Config.chartDefaults.yAxes.humidity,
         ],
-        // the data to display (note: the axis of any seires listed here must also be included as a y-axis)
+        // the data to display (note: the axis of any series listed here must also be included as a y-axis)
         series : [
             Config.chartDefaults.series.outTemp,
             Config.chartDefaults.series.heatindex,
@@ -431,7 +464,7 @@ mesowx.Config = (function() {
             Config.chartDefaults.series.rainRate,
             Config.chartDefaults.series.outHumidity,
             Config.chartDefaults.series.inTemp,
-            Config.chartDefaults.series.inHumidity
+            Config.chartDefaults.series.inHumidity,
         ],
         // see http://api.highcharts.com/highstock
         highstockChartOptions : {
@@ -491,11 +524,11 @@ mesowx.Config = (function() {
         yAxes : [
             Config.chartDefaults.yAxes.temp,
             Config.chartDefaults.yAxes.barometer,
-            Config.chartDefaults.yAxes.windSpeed,
-            Config.chartDefaults.yAxes.windDir,
+            Config.chartDefaults.yAxes.windspeed,
+            Config.chartDefaults.yAxes.winddir,
             // Uncomment the following line and the dayRain series below if you have a Davis station and want to display it
             //Config.chartDefaults.yAxes.rain,
-            Config.chartDefaults.yAxes.rainRate,
+            Config.chartDefaults.yAxes.rainrate,
             Config.chartDefaults.yAxes.humidity,
         ],
         // the data to display (note: the axis of any seires listed here must also be included as a y-axis)
@@ -512,7 +545,7 @@ mesowx.Config = (function() {
             Config.chartDefaults.series.rainRate,
             Config.chartDefaults.series.outHumidity,
             Config.chartDefaults.series.inTemp,
-            Config.chartDefaults.series.inHumidity
+            Config.chartDefaults.series.inHumidity,
         ],
         // see http://api.highcharts.com/highstock
         highstockChartOptions : {
@@ -565,10 +598,10 @@ mesowx.Config = (function() {
         yAxes : [
             Config.chartDefaults.yAxes.temp,
             Config.chartDefaults.yAxes.barometer,
-            Config.chartDefaults.yAxes.windSpeed,
-            Config.chartDefaults.yAxes.windDir,
+            Config.chartDefaults.yAxes.windspeed,
+            Config.chartDefaults.yAxes.winddir,
             Config.chartDefaults.yAxes.rain,
-            Config.chartDefaults.yAxes.rainRate,
+            Config.chartDefaults.yAxes.rainrate,
             Config.chartDefaults.yAxes.humidity,
         ],
         // the data to display (note: the axis of any seires listed here must also be included as a y-axis)
@@ -586,7 +619,7 @@ mesowx.Config = (function() {
             Config.chartDefaults.series.rainRate,
             Config.chartDefaults.series.outHumidity,
             Config.chartDefaults.series.inTemp,
-            Config.chartDefaults.series.inHumidity
+            Config.chartDefaults.series.inHumidity,
         ],
         // see http://api.highcharts.com/highstock
         highstockChartOptions : {
@@ -635,7 +668,7 @@ mesowx.Config = (function() {
         realTimeDataProvider : Config.realTimeDataProvider,
         // the fields to display
         // The 'id' property is used to alias the field so that it can be referenced elsewhere by it, it defaults to the fieldId
-        // By default, the data value is rendered into the HTML element with the class name convetion: '<id>-value' (e.g. 'outTemp-value') and
+        // By default, the data value is rendered into the HTML element with the class name convention: '<id>-value' (e.g. 'outTemp-value') and
         // will visually indicate whether the value went up or down since the last update. This can be changed or disabled by specifying a
         // different 'valueDisplayManagerFactory' such as the meso.MesoConsole.SimpleValueDisplayManagerFactory which will only update the
         // value without any other change indication. If present, the field's unit suffix label will be rendered into the HTML element with 
@@ -649,6 +682,9 @@ mesowx.Config = (function() {
             { fieldDef: Config.fieldDefaults.heatindex, id: 'heatindex' },
             { fieldDef: Config.fieldDefaults.windchill, id: 'windchill' },
             { fieldDef: Config.fieldDefaults.barometer },
+            { fieldDef: Config.fieldDefaults.windSpeed },
+            { fieldDef: Config.fieldDefaults.windDir },
+
             /*{ fieldDef: Config.fieldDefaults.windSpeed },
             {
                 fieldDef: Config.fieldDefaults.windDir,
