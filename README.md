@@ -1,7 +1,7 @@
 
 **Jun 2020:  Weewx and wee_extension -- DONE!**
 
-The move to weewx_extension is done, it just needs some beta testing...
+The move to use _wee_extension_ for the installation process is done. This, along with various updates and easier configuration gives a working default local installation and a far easier process to set up a remote installation (move a directory, rename one file). Testing and feedback is always welcome...
 
 More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It's not dead yet (it's just sleeping squire.)
 
@@ -9,9 +9,9 @@ More could be done with this skin and with support and contributions from the co
 
 Updated the d3, jquery, and highstock libraries. Released as [version 0.6.2](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.2)
 
-Adjust css, index.html, and Config.js to improve screen usage and allow dynamic rescaling.
+Adjust css, _index.html_ and _Config.js_ to improve screen usage and allow dynamic rescaling.
 
-Add colors to sink.conf, match them to Config.js and update highcharts options to match 8.1.1
+Add colors to _sink.conf_ match them to _Config.js_ and update highcharts options to match 8.1.1
 
 
 See the CHANGELOG.md for a brief summary of changes.
@@ -42,22 +42,22 @@ No license was available at the time of upload but Peter Finley (MesoWx author) 
 The lirpa directory now contains the updated scripts as written by Luc Heijst and were rewritten to keep pace with either the changes in weewx versions, or issues that arose and were reported by weewx users.
 Some of those scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded here as individual commits so viewing the commit history of this repo will show the history. Not all commits are working versions, the latest should be okay though.
 
-Those scripts and associated contents will be incorporated into a skin that is installable using wee_extension.
+Those scripts and associated contents will be incorporated into a skin that is installable using _wee_extension_.
 This repo is not intended to replace the original Lirpa (bitbucket) repo, rather it's an opportunity to keep it (or at least MesoWx) alive and current.
 
 ## Limitations
 
  1. A modern web browser is required for the out of the box front-end (Chrome, Firefox, Safari, IE10+)
- 2. Extremely large archive databases likely won't perform very well at the moment (my archive database contains 350,000+ records and has performed adequately), especially on a low power server
+ 2. Extremely large archive databases likely won't perform very well at the moment (my archive database contains 350,000+ records and has performed adequately), especially on a low power server.
  3. To record the raw (loop) packets it uses mysql, these days MQTT has filled that niche and is far better suited to it. This skin does not use MQTT.
 
 ## Warnings
 
-This software is dated, but still functional. It fills a niche for me, and possibly for others. It was also a long term objective on my part to see if it could be managed by wee_extension. That's one itch scratched!
+This software is dated, but still functional. It fills a niche for me, and possibly for others. It was also a long term objective on my part to see if it could be managed by _wee_extension_. That's one itch scratched!
 
-It can take some effort to modify Mesowx to personal taste, but the actual installation process is far easier under the guidance of wee_extension than it was in the past. The default local (Raw) installation should just run once installed.
+It can take some effort to modify Mesowx to personal taste, but the actual installation process is far easier under the guidance of _wee_extension_ than it was in the past. The default local (Raw) installation should just run once installed.
 
-The old caveat of there being **NO** update path still applies. However the new script - mesowx.py - hasn't really changed that much, just the way it's called. If you have a working install then don't blow that away, the script should still work with it, you'll just need to call different sections of it.
+The old caveat of there being **NO** update path still applies. However the new script - _mesowx.py_ - hasn't really changed that much, just the way it's called. If you have a working install then don't blow that away, the script should still work with it, you'll just need to call different sections of it.
 So, Backup your existing version, don't overwrite it. Install this one in parallel, in its new location, and then copy your changes over. If it's index.html changes then a drop in could work. If it's the config files then weewx.conf will need tweaking. If it's the script then you'll need some python knowledge to sort out the redirection.
 
 If that all seems too hard then contact me via github and we'll see what we can work out.
@@ -67,37 +67,39 @@ If that all seems too hard then contact me via github and we'll see what we can 
 # Weewx and wee_extension -- DONE!
 
 **Jun 2020**
-The move to weewx_extension is done, it needs some beta testing...
+The move to weewx via _wee_extension_ is done, it needs some beta testing...
 
-wee_extension will install and configure this skin as much as it can. More could be done with the integration and with support and contributions from the community that could still happen.
+_wee_extension_ will install and configure this skin as much as it can. More could be done with the integration and with support and contributions from the community that could still happen.
 
-The 3 original mesowx scripts have been combined into one script which are all installed as a SLE - a skin named Mesowx, a script named mesowx.py and a database named mesowx.
+The 3 original mesowx scripts have been combined into one script which are all installed as a SLE - a skin named Mesowx, a script named _mesowx.py_ and a database named mesowx.
 
-Because it has control over the local setup ... Raw ... you will find that version fully configured and ready to view in your browser at http://localhost/weewx/mesowx/
+Because it has control over the local setup ... **[Mesowx][[Raw]]** ... you will find that version fully configured and ready to view in your browser at http://localhost/weewx/mesowx/
 
-The skin is populated with values sourced from weewx.conf and the provided wee_extension install.py values. It applies them to both the Raw and RemoteSync versions.
+The skin is populated with values sourced from _weewx.conf_ and from _install.py_. It applies them to both the Raw and RemoteSync versions.
 
-It also generates unique security keys for the RemoteSync version.
+It also generates the two unique security keys that are required for the RemoteSync version.
 
 # Install, then configure
+
+I've been more rigourous with packaging up the point releases as something meaningful and trackable (especially if I break something). That's made that page fairly busy but it offers a good way of tracking the changes, especially for the switch to v0.6.X where the change to d3, highcharts and jquery library was made.
 
     wget -O weewx-mesowx.zip https://github.com/glennmckechnie/weewx-mesowx/archive/master.zip
     wee_extension --install weewx-mesowx.zip
 
-## Configuration values in weewx.conf
+## Configuration values in weewx.conf and skin.conf
 
-The supplied values, except for the remote_server_url and the polling_interval can all be left as they are.
+The supplied values, except for the **remote_server_url** and the **polling_interval** can all be left as they are.
 
-Your values for the raw_security_key and archive_security_key will be different. Those are auto generated by the installer and will be unique for every installation. You can change them if you like, and then wait for your values to propagate through to the webserver files - all before you transfer the files etc. to the remote server.
+Your values for the *raw_security_key* and *archive_security_key* will be different. Those are auto generated by the installer and will be unique for every installation. You can change them if you like, and then wait for your values to propagate through to the webserver files - all before you transfer the files etc. to the remote server.
 
 The remote server URL obviously needs changing.
 
 The polling interval sets the refresh time in seconds (converted to milliseconds) 60 is the default. I use 20 for the 1-wire setup. It's up to you and your station.
 
-skip_loop sets the time allowed between loop packets. If you get them every 2 seconds and you want to change that to every 20 seconds, then the 2 becomes 20.
+**skip_loop** sets the time allowed between loop packets. If you get them every 2 seconds and you want to change that to every 20 seconds, then the 2 becomes 20.
 If you already get them every 20 seconds, then the default value of 2 seconds will have no affect. Leave it or increase it if 20 seconds is still too frequent. It's your choice.
 
-The data_limit is the number of hours of records to keep in the raw database, anything older than that are deleted. It is also used in the 24-hour range. If you opt for 48 then it should display 48 hours of raw records (rather than the default of 24-Hours)
+The **data_limit** is the number of hours of records to keep in the raw database, anything older than that are deleted. It is also used in the 24-hour range. If you opt for 48 then it should display 48 hours of raw records (rather than the default of 24-Hours)
 
 
     # Options for extension 'mesowx'
@@ -106,7 +108,7 @@ The data_limit is the number of hours of records to keep in the raw database, an
        loop_polling_interval = 60
        [[RemoteSync]]
             raw_entity_id = weewx_raw
-            remote_server_url = http://192.168.0.100/weewx/mesowx/meso/
+            remote_server_url = http://remote_server_address/weewx/mesowx/meso/
             raw_security_key = gQVAtmzFP6XkwlCdiUi
             archive_entity_id = weewx_archive
             archive_security_key = w29VxwOOzJYQxnKa3h
@@ -114,27 +116,57 @@ The data_limit is the number of hours of records to keep in the raw database, an
             data_binding = mesowx_binding
             data_limit = 48
             skip_loop = 2
+            
+ChartColors is a dict of values in the _Mesowx/skin.conf_ file which are used by the SLE (CheetahGenerator ) to populate the colors in _skins/Mesowx/js/Config.js.tmpl_, which then becomes _mesowx/js/Config.js_
+You can now easily get rid of my values and choose your own!
+
+    [ChartColors]
+        # These are the color codes used in Config.js to define the chart lines and
+        # the chart names.
+        # To change these colors, and have them take affect, you will need to have
+        # the skin set to enable in weewx.conf, ie:- under [Mesowx] enable = True
+        #
+        # One of many ... https://www.rapidtables.com/web/color/Web_Safe.html
+
+        out_temp = '#0033FF'
+        bar_ometer = '#660000'
+        wind_speed = '#CC3300'
+        wind_dir = '#999900'
+        r_ain = '#80699B'
+        rain_rate = '#89A54E'
+        out_humidity = '#3D96AE'
+        in_temp = '#CC00CC'
+        dew_point = '#8BBC21'
+        wind_chill = '#0d233A'
+        heat_index = '#FF9900'
+        wind_gust = '#336666'
+        wind_gustdir = '#B5CA92'
+        day_rain = '#0D233A'
+        in_humidity = '#F28F43'
 
 
 ## Local Installation.
 
 The local (Raw) mesowx database will be automatically generated and consists of just the raw (loop) table. The archive (REC) values will be sourced from your existing mysql weewx database.
 
-Once all the mesowx files are generated (at last count there were 51 of them) and transferred to your local web server the [StdReport][[Mesowx]] skin can be disabled by changing the enable = True stanza to...
+Once all the mesowx files are generated (at last count there were 51 of them) and transferred to your local web server the **[StdReport][[Mesowx]]** skin can be disabled by changing the _enable = True_ stanza to...
 
     enable = False
 
 #### Why False?
 
-A working installation does not require that skin to be regenerated, it's a one time requirement.
+A working installation does not require that skin to be regenerated each report interval.
 
-However, if you later decide to change any of the [Mesowx] entries in weewx.conf, or experiment with the server files (remember the .tmpl files are the source files) then you'll need to renable the skin to allow the config files to be recreated. You can make changes to the webserver files with the skin disabled (enable = False) but those changes run the risk of being overwritten if you forget what you've done (time passes for us all, memories fade!).
+If the defaults work for you then it can be disabled after the first 1 or 2 cycles.
+
+However, if you want to tinker with colors (available via _skin.conf_), change any of the **[Mesowx]** entries in weewx.conf, or experiment with the server files (remember the _XXXX*.tmpl_ files are the source files) then you'll need to renable the skin to allow those config files to be recreated, or your new files to be the source files.
+If you make changes to the webserver files with the skin disabled (_enable = False_) then those changes run the risk of being overwritten if you re-enable the skin and forget what you've done (time passes for us all and memories fade!).
 
 ## Remote Installation.
 
 The local (Raw) installation is setup to run once weewx is restarted.
 
-The RemoteSync installation is not. To get weewx to run this section of the script you will need to manually edit the weewx.conf file by appending user.mesowx.SyncService to the end of restful services, located under the [Engine][[Services]]section
+The RemoteSync installation is not. To get weewx to run this section of the script you will need to manually edit the weewx.conf file by appending **user.mesowx.SyncService** to the end of restful_services, located under the **[Engine][[Services]]** section
 
     [...]
 
@@ -150,11 +182,11 @@ Likewise, if you don't want the local (Raw) version of Mesowx running then remov
 
     , user.mesowx.RawService
 
-from the end of the archive_services = [...] line
+from the end of the archive_services = [...] line.
 
-The RemoteSync version will also need action on your part as all the files that are generated and transferred to the local web server need to be transferred to your remote web server. This is the exact same directory and structure as the local, Raw version uses.  (ie:- That www/html/weewx/mesowx directory is portable.)
+The RemoteSync version will also need action on your part as all the files that are generated and transferred to the local web server need to be transferred to your remote web server. This is the exact same directory and structure as the local, Raw version uses.  (ie:- That _www/html/weewx/mesowx_ directory is fully portable.)
 
-Copy that whole mesowx directory to your remote webserver and then; once all the files and directories are moved to that remote machine; then rename config-RemoteSync.json to config.json to allow that remote installation to work correctly.
+Copy that whole mesowx directory to your remote webserver and then; once all the files and directories are moved to that remote machine; then rename _config-RemoteSync.json_ to _config.json_ to allow that remote installation to work correctly.
 
 ie:- the file...
 
@@ -171,65 +203,68 @@ With that done you should have a working webserver installation; once the databa
 Okay, You now have a working setup, but it makes a few assumptions about fields and units. These can all be modified but you might end up with some breakage.
 As of version 0.5.1 the installer will adjust the units it can according to the configuration of the target_units setting defined in weewx.conf ie: US, METRICWX or METRIC. You may want to refine them further and it is here that it is done (after the skin is disabled, otherwise your edits will be overwritten.)
 
-As configured, it will only use the database fields as hardcoded within the file config.json
+As configured, it will only use the database fields as hardcoded within the file _config.json_
 
 They are listed under "columns", in two places. Here's the one at line 58 for the archive table...
 
-    "columns" : {
+            "columns" : {
                 "dateTime" :    {"type" : "number", "unit" : "s"},
                 "interval" :    {},
-                "barometer" :   {"unit" : "inHg"},
-                "inTemp" :      {"unit" : "f"},
-                "outTemp" :     {"unit" : "f"},
+                "barometer" :   {"unit" : "$press"},
+                "inTemp" :      {"unit" : "$degr"},
+                "outTemp" :     {"unit" : "$degr"},
                 "inHumidity" :  {"unit" : "perc"},
                 "outHumidity" : {"unit" : "perc"},
-                "windSpeed" :   {"unit" : "mph"},
+                "windSpeed" :   {"unit" : "$speed"},
                 "windDir" :     {"unit" : "deg"},
-                "windGust" :    {"unit" : "mph"},
+                "windGust" :    {"unit" : "$speed"},
                 "windGustDir" : {"unit" : "deg"},
-                "rainRate" :    {"unit" : "inHr"},
-                "rain" :        {"unit" : "in"},
-                "dewpoint" :    {"unit" : "f"},
-                "windchill" :   {"unit" : "f"},
-                "heatindex" :   {"unit" : "f"}
+                "rainRate" :    {"unit" : "$rainR"},
+                "rain" :        {"unit" : "$meas"},
+                "dewpoint" :    {"unit" : "$degr"},
+                "windchill" :   {"unit" : "$degr"},
+                "heatindex" :   {"unit" : "$degr"}
             },
 
-then again at line 107 for the raw (loop) values.  This is also one of the places to change the units, the default is in US units.
+then again at line 107 for the raw (loop) values.  The units will default to the value detected in _weewx.conf_
 
 If you are going to add fields that will be fine, you don't have to use them. However those edits need to be done before you create the remote database or allow it to be populated. It can't create what it doesn't know about.
 
-The other location that will need to be modified is under mesowx/js/Config.js and these units will also be modified according to weewx.conf
+The other location that will need to be modified is under _mesowx/js/Config.js_ and these units and there formatting will also be modified according to the weewx defaults in _weewx.conf_
 
-     Config.fieldDefaults = {
-        'dateTime':   new meso.FieldDef('dateTime',    meso.Unit.ms,      0,   meso.Agg.avg),
-        'outTemp':    new meso.FieldDef('outTemp',     mesowx.Unit.f,     1,   meso.Agg.avg, 'Out Temp'),
-        'dewpoint':   new meso.FieldDef('dewpoint',    mesowx.Unit.f,     1,   meso.Agg.avg, 'Dewpoint'),
-        'rain':       new meso.FieldDef('rain',        mesowx.Unit.in,    2,   meso.Agg.sum, 'Rain'),
-        'rainRate':   new meso.FieldDef('rainRate',    mesowx.Unit.inHr,  2,   meso.Agg.max, 'Rain Rate'),
-        'dayRain':    new meso.FieldDef('dayRain',     mesowx.Unit.in,    2,   meso.Agg.max, 'Rain Today'),
-        'windSpeed':  new meso.FieldDef('windSpeed',   mesowx.Unit.mph,   0,   meso.Agg.avg, 'Wind Speed'),
-        'windDir':    new meso.FieldDef('windDir',     mesowx.Unit.deg,   0,   meso.Agg.avg, 'Wind Direction'),
-        'windGust':   new meso.FieldDef('windGust',    mesowx.Unit.mph,   0,   meso.Agg.avg, 'Wind Gust'),
-        'windGustDir':new meso.FieldDef('windGustDir', mesowx.Unit.deg,   0,   meso.Agg.avg, 'Wind Gust Direction'),
-        'outHumidity':new meso.FieldDef('outHumidity', mesowx.Unit.perc,  1,   meso.Agg.avg, 'Out Humidity'),
-        'barometer':  new meso.FieldDef('barometer',   mesowx.Unit.inHg,  3,   meso.Agg.avg, 'Barometric Pressure'),
-        'windchill':  new meso.FieldDef('windchill',   mesowx.Unit.f,     1,   meso.Agg.avg, 'Wind Chill'),
-        'heatindex':  new meso.FieldDef('heatindex',   mesowx.Unit.f,     1,   meso.Agg.avg, 'Heat Index'),
-        'inTemp':     new meso.FieldDef('inTemp',      mesowx.Unit.f,     1,   meso.Agg.avg, 'In Temp'),
-        'inHumidity': new meso.FieldDef('inHumidity',  mesowx.Unit.perc,  1,   meso.Agg.avg, 'In Humidity')
-    };
-
+    Config.fieldDefaults = {
+      'dateTime':     new meso.FieldDef('dateTime',   meso.Unit.ms,       0,    meso.Agg.avg),
+      'outTemp':      new meso.FieldDef('outTemp',    mesowx.Unit.$degr,  1,    meso.Agg.avg, 'Out Temp'),
+      'dewpoint':     new meso.FieldDef('dewpoint',   mesowx.Unit.$degr,  1,    meso.Agg.avg, 'Dewpoint'),
+      'rain':         new meso.FieldDef('rain',       mesowx.Unit.$meas,  $m_f, meso.Agg.sum, 'Rain'),
+      'rainRate':     new meso.FieldDef('rainRate',   mesowx.Unit.$rainR, $m_f, meso.Agg.max, 'Rain Rate'),
+      'dayRain':      new meso.FieldDef('dayRain',    mesowx.Unit.$meas,  $m_f, meso.Agg.max, 'Rain Today'),
+      'windSpeed':    new meso.FieldDef('windSpeed',  mesowx.Unit.$speed, 0,    meso.Agg.avg, 'Wind Speed'),
+      'windDir':      new meso.FieldDef('windDir',    mesowx.Unit.deg,    0,    meso.Agg.avg, 'Wind Direction'),
+      'windGust':     new meso.FieldDef('windGust',   mesowx.Unit.$speed, 0,    meso.Agg.avg, 'Wind Gust'),
+      'windGustDir':  new meso.FieldDef('windGustDir',mesowx.Unit.deg,    0,    meso.Agg.avg, 'Wind Gust Direction'),
+      'outHumidity':  new meso.FieldDef('outHumidity',mesowx.Unit.perc,   1,    meso.Agg.avg, 'Out Humidity'),
+      'barometer':    new meso.FieldDef('barometer',  mesowx.Unit.$press, $p_f, meso.Agg.avg, 'Barometric Pressure'),
+      'windchill':    new meso.FieldDef('windchill',  mesowx.Unit.$degr,  1,    meso.Agg.avg, 'Wind Chill'),
+      'heatindex':    new meso.FieldDef('heatindex',  mesowx.Unit.$degr,  1,    meso.Agg.avg, 'Heat Index'),
+      'inTemp':       new meso.FieldDef('inTemp',     mesowx.Unit.$degr,  1,    meso.Agg.avg, 'In Temp'),
+      'inHumidity':   new meso.FieldDef('inHumidity', mesowx.Unit.perc,   1,    meso.Agg.avg, 'In Humidity')
+     };
 
 If you change any of these defaults, by editing these files directly; then be very careful as typos can be silent code breakers.
 
 Take a backup (as you always do ?) and use a lot of care.
+
+### I tweaked some values and "It doesn't work"
+
+See the Troubleshooting section below. :-)
 
 ## Testing the default installation
                  (ie: excluding the above modifications).
 
 A quick test of the configuration is to point the browser to the remote site using...
 
-http://"your_site"/weewx/mesowx/meso/data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
+http://remote_server_address/weewx/mesowx/meso/data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
 
 and a date should be returned if the database has something...
 
@@ -253,7 +288,7 @@ To create the remote database and give the appropriate permissions that match th
        GRANT select, update, create, delete, insert ON mesowx.* TO mesowx@'localhost' IDENTIFIED BY 'weewx';
        quit;
 
-The remote mysql database - mesowx - contains 2 tables; archive and raw (weewx via the mesowx.py script, will create those).
+The remote mysql database - mesowx - contains 2 tables; archive and raw (weewx via the _mesowx.py_ script, will create those).
 
 A large database will take a lot to create via the backfill method.
 
@@ -265,7 +300,7 @@ If it's too large it may even refuse, or your machine may be brought to it's kne
 
 While it's doing that long backfill, weewx will be stalled, that's no records generated, no graphs, nothing, nada, zilch. The only activity may be in your logs - if debug is turned on.
 
-Once the database is populated (or starting to be) then pointing your browser to the remote machines webserver mesowx/index.html file should result in a working mesowx website.
+Once the database is populated (or starting to be) then pointing your browser to the remote machines webserver _mesowx/index.html_ file should result in a working mesowx website.
 
 # To repeat:
            Use wee_extension to install MesoWX.
@@ -321,7 +356,7 @@ A local installation doesn't suffer from this problem, the databases stay curren
 ## README's
 There are 2 README files in the github repo (also in the downloaded zip file).  If you have problems read those. They cover the history of the setup and while out of date they may fill in some knowledge gaps.
 
-There is also this README available from your Mesowx installation. Edit the links.inc file if required.
+There is also this README available from your Mesowx installation. Edit the _links.inc_ file if required.
 
 RetainLoopValues.py is not a file I've ever used. It's included within this script, nothings been changed except to incorporate it as a function.
 
@@ -331,7 +366,7 @@ You are responsible for the security of your webserver and mysql database.
 
 The installer will generate 2 random passwords and insert them into the script as well as the relevant config files. If you don't trust them change them but don't make any typos in the process or you will break the remote access granted to weewx and the database. They are truly random keys, check the install.py file for the 'secret' to their generation.
 
-With those passwords (entity_keys), and others that could be available to anyone with webserver access, you need to prevent them being read.  For the apache2 installation here I've added the following to /etc/apache2/apache2.conf to prevent any files being accessed that are not index.html
+With those passwords (entity_keys), and others that could be available to anyone with webserver access, you need to prevent them being read.  For the apache2 installation here I've added the following to _/etc/apache2/apache2.conf_ to prevent any files being accessed that are not _index.html_
 
        <Directory /var/www/html/weewx/mesowx>
                Options -Indexes
@@ -389,7 +424,21 @@ Bug reports to github...
 
 # Troubleshooting
 
-These are from README-lirpa.md, the original notes included when Mesowx was first released. They are still relevant
+Modifying the source files can introduce errors.
+
+If you're greeted with a blank page, or something that's less than expected, then you've made a typo in one of your edits. Probably as small as a misplaced comma, or even a character in the wrong spot.
+
+Keeping backup copies of the files you are working on is essential. Using the command _diff_ to detect differences between files is great, but personally I use **vim -d file_name.py file_name.py.bup** as that will show the differences very clearly and allow the fix to be made on the spot. Explore your editor and see if it has a similar option.
+
+Watching the log files, syslog and webserver logs is also an essential requirment. **multitail -f /var/log/apache2/access.log /var/log/apache2/error.log** works for me (hit the enter key to add a colored marker line to multitail) as while the messages amy be cryptic, it's better than nothing and are always useful as clues.
+
+Finally, Use your browsers **Inspect Element** option.
+
+Right click on the web page, click on **Inspect Element**, switch to the **Console**, refresh the page and start exploring the results that are returned. (Hint, it's the red ones that matter :) Clicking on the filename associated with the message will be enlightening.)
+
+----
+
+#### The following is from the README-lirpa.md, the original notes included when Mesowx was first released. They are still relevant
 
 Check your web server/PHP logs for errors. Make sure that logging is enabled in your _php.ini_
 To confirm, check your 'php.ini' for the following directives:
