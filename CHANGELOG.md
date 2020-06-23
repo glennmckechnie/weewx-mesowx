@@ -1,5 +1,20 @@
 # MesoWx Change Log #
 
+## 0.6.3 (2020-06-23) ##
+
+* flag (stats - min/max) colors are now the same as the line colors. They should also be
+    visible when near the boundaries (clip : false)
+* add optional inTemp and inHumidity sections to mesowx console. We have the room, if we
+    have the fields...
+* re-add rain to charts. Make dayRain a configurable option from skin.conf (untested, don't
+    have one, feed back welcomed!)
+* Ratchet up the user configuration in skin.con - 2 default pallets and the previous user
+    configurable one
+* add chart visibility options to skin.conf. All but inTemp are 'on' to start with.
+    outTemp is always on (otherwise the chart generation errors and we get nowhere)
+* add modules/exporting.js to add print menu (top right hamburger style)
+* there's still an issue with the Humidity flags when the lines are hidden ??
+
 ## 0.6.2 (2020-06-18) ##
 
 * Add colors to skin.conf, match them to Config.js
@@ -7,16 +22,19 @@
 
 ## 0.6.1 (2020-06-17) ##
 
-* modify css, index.html, and Config.js files to allow for dynamic resizing and better use of screen space.
-    Scales well under Opera, Firefox, Chrome and a Samsung phone. Trust that it works for others as well!
+* modify css, index.html, and Config.js files to allow for dynamic resizing and better use of
+    screen space.
+    Scales well under Opera, Firefox, Chrome and a Samsung phone. Trust that it works for others
+    as well!
 
 ## 0.6.0 (2020-06-16) ##
 
-* update to d3-v3.5.17.min.js (last of the v3 line) : highstock-v8.1.1.js : jquery-3.5.1.min.js libraries
+* update to d3-v3.5.17.min.js (last of the v3 line) : highstock-v8.1.1.js : jquery-3.5.1.min.js
+    libraries.
   This gives better reloads for the local version, it was stalling on the archive page for me
   There is a slight change in appearance (the navigator bar for one)
 * add marker symbols etc supplied by user "laki1" back in 2017 ! ...
-  https://groups.google.com/d/msg/weewx-user/eAUsTqR8yYQ/qCtf7IGaBwAJ
+    https://groups.google.com/d/msg/weewx-user/eAUsTqR8yYQ/qCtf7IGaBwAJ
 * for readability: split labels between left and right sides of charts
 
 ## 0.5.3 (2020-06-16) ##
@@ -96,7 +114,7 @@
 
 ### Features
 * Real-time data provider polling interval now defaulted to 60 seconds instead of 2
-* Better support for stations that don't emit complete LOOP packets via a new "retain" weewx plugin 
+* Better support for stations that don't emit complete LOOP packets via a new "retain" weewx plugin
 * Meso version bump to 0.3.3
 
 

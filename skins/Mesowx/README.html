@@ -29,8 +29,25 @@
 <p><strong>Jun 2020:  Weewx and wee_extension &ndash; DONE!</strong></p>
 <p>The move to use <em>wee_extension</em> for the installation process is done. This, along with various updates and easier configuration gives a working default local installation and a far easier process to set up a remote installation (move a directory, rename one file). Testing and feedback is always welcome&hellip;</p>
 <p>More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It&rsquo;s not dead yet (it&rsquo;s just sleeping squire.)</p>
-<p><strong>It&rsquo;s still June 2020</strong></p>
-<p>Updated the d3, jquery, and highstock libraries. Released as <a href="https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.2">version 0.6.2</a></p>
+<p><strong>23rd June 2020</strong></p>
+<h3>Better Bling!</h3>
+<p>Released as <a href="https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.3">version 0.6.3</a></p>
+<ul>
+<li>flag (stats - min/max) colors are now the same as the line colors. They should also be
+    visible when near the boundaries (clip : false)</li>
+<li>add optional inTemp and inHumidity sections to mesowx console. We have the room, if we
+    have the fields&hellip;</li>
+<li>re-add rain to charts. Make dayRain a configurable option from skin.conf (untested, don&rsquo;t
+    have one, feed back welcomed!)</li>
+<li>Ratchet up the user configuration in skin.con - 2 default pallets and the previous user
+    configurable one</li>
+<li>add chart visibility options to skin.conf. All but inTemp are &lsquo;on&rsquo; to start with.
+    outTemp is always on (otherwise the chart generation errors and we get nowhere)</li>
+<li>add modules/exporting.js to add print menu (top right hamburger style)</li>
+<li>there&rsquo;s still an issue with the Humidity flags.</li>
+</ul>
+<hr>
+<p>Updated the d3, jquery, and highstock libraries.</p>
 <p>Adjust css, <em>index.html</em> and <em>Config.js</em> to improve screen usage and allow dynamic rescaling.</p>
 <p>Add colors to <em>sink.conf</em> match them to <em>Config.js</em> and update highcharts options to match 8.1.1</p>
 <p>See the CHANGELOG.md for a brief summary of changes.</p>
@@ -40,16 +57,16 @@
 <h2>What is MesoWx</h2>
 <p>MesoWx is a real-time HTML front-end for visualizing personal weather station data. It provides a real-time graph and console display, and dynamic graphs of your weather station history allowing you to explore the details of any recorded time period in your data.</p>
 <p>MesoWx displays data from a database and does not itself interface with any weather station hardware directly, however, being built upon Meso it supports an HTTP API for remotely adding data, which allows integration with existing weather station software. MesoWx integrates well with Weewx and should support any weather station that it supports.</p>
-<p><img alt="v0.6.0-1month-archive" src="lirpa/images/v0.6.2-1month-archive.png">
+<p><img alt="v0.6.3-1month-archive" src="lirpa/images/v0.6.3-1month-archive.png">
 <img alt="Samsung-landscape.png" src="lirpa/images/Samsung-landscape.png"></p>
 <p><strong>June 2020:</strong> Time has passed and there are many more excellent and capable skins available for weewx now. They have evolved with the community and are not only well integrated with weewx but feature packed. This one lacks the bells and whistles but is still quite capable at conveying the collected information, thanks to highcharts, decent hardware :-) and access to the whole database.</p>
 <h2>History</h2>
 <p>This repo started with the 0.4.0 version which was the latest available on the 1st February 2018. It has been copied here to enable integration with Luc&rsquo;s raw.py and sync.py scripts
 No license was available at the time of upload but Peter Finley (MesoWx author) has indicated that it is <a href="https://groups.google.com/d/msg/meso-user/ebs6sOhNqsg/iNeqnVarEgAJ">free to use</a></p>
-<p>The lirpa directory now contains the updated scripts as written by Luc Heijst and were rewritten to keep pace with either the changes in weewx versions, or issues that arose and were reported by weewx users.
-Some of those scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded here as individual commits so viewing the commit history of this repo will show the history. Not all commits are working versions, the latest should be okay though.</p>
-<p>Those scripts and associated contents will be incorporated into a skin that is installable using <em>wee_extension</em>.
-This repo is not intended to replace the original Lirpa (bitbucket) repo, rather it&rsquo;s an opportunity to keep it (or at least MesoWx) alive and current.</p>
+<p>The lirpa directory now contains the updated scripts as written by Luc Heijst and that were updated/rewritten to keep pace with either the changes in weewx versions, or issues that arose and were reported by weewx users.
+Some of those scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded here as individual commits so viewing the commit history of this repo will show some of the history of the mesowx scripts, after the lirpa repo stopped  development.</p>
+<p>Those scripts and associated contents have been tweaked to enable the weewx installer to control the installation process. The use of wee_extension vastly improves the installation process and mesowx configuration and should go someway towards keeping MesoWx alive and current.</p>
+<p>Previously it took a lot of effort to modify Mesowx to personal taste. The default local (Raw) installation will just run once installed and the RemoteSync version is in a state where a cut, paste and a file rename will get it into a working state (the database setup does involve a few more steps. Ah well!) Configuration is predominately via <em>weewx.conf</em> and <em>skin.conf</em></p>
 <h2>Limitations</h2>
 <ol>
 <li>A modern web browser is required for the out of the box front-end (Chrome, Firefox, Safari, IE10+)</li>
@@ -57,9 +74,8 @@ This repo is not intended to replace the original Lirpa (bitbucket) repo, rather
 <li>To record the raw (loop) packets it uses mysql, these days MQTT has filled that niche and is far better suited to it. This skin does not use MQTT.</li>
 </ol>
 <h2>Warnings</h2>
-<p>This software is dated, but still functional. It fills a niche for me, and possibly for others. It was also a long term objective on my part to see if it could be managed by <em>wee_extension</em>. That&rsquo;s one itch scratched!</p>
-<p>It can take some effort to modify Mesowx to personal taste, but the actual installation process is far easier under the guidance of <em>wee_extension</em> than it was in the past. The default local (Raw) installation should just run once installed.</p>
-<p>The old caveat of there being <strong>NO</strong> update path still applies. However the new script - <em>mesowx.py</em> - hasn&rsquo;t really changed that much, just the way it&rsquo;s called. If you have a working install then don&rsquo;t blow that away, the script should still work with it, you&rsquo;ll just need to call different sections of it.
+<p>This software may be dated, but it is still functional. It fills a niche for me, and possibly for others. It was also a long term objective on my part to see if it could be managed by <em>wee_extension</em>, and that&rsquo;s one itch that has now been scratched!</p>
+<p>The old caveat of there being <strong>NO</strong> update path still applies. However the new script - <em>mesowx.py</em> - hasn&rsquo;t really changed that much, only the way it&rsquo;s called. If you have a working install then don&rsquo;t blow that away, the script should still work with it, you&rsquo;ll just need to call different sections of it if you decide to update to this weewx4/python3 compatible version.
 So, Backup your existing version, don&rsquo;t overwrite it. Install this one in parallel, in its new location, and then copy your changes over. If it&rsquo;s index.html changes then a drop in could work. If it&rsquo;s the config files then weewx.conf will need tweaking. If it&rsquo;s the script then you&rsquo;ll need some python knowledge to sort out the redirection.</p>
 <p>If that all seems too hard then contact me via github and we&rsquo;ll see what we can work out.</p>
 <hr>

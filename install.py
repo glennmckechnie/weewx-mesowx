@@ -24,7 +24,7 @@ class MesowxInstaller(ExtensionInstaller):
         raw_key = random_password()
 
         super(MesowxInstaller, self).__init__(
-            version='0.6.2',
+            version='0.6.3',
             name='mesowx',
             description='Weather station console web front-end with'
                         'real-time updating and dynamic charting.',
@@ -77,6 +77,7 @@ class MesowxInstaller(ExtensionInstaller):
                     'skins/Mesowx/js/lib/d3-v3.5.17.min.js',
                     'skins/Mesowx/js/lib/highstock-v8.1.1.js',
                     'skins/Mesowx/js/lib/jquery-3.5.1.min.js',
+                    'skins/Mesowx/js/lib/modules/exporting.js',
                     'skins/Mesowx/meso/data.php',
                     'skins/Mesowx/meso/stats.php',
                     'skins/Mesowx/meso/updateData.php',

@@ -204,6 +204,27 @@ mesowx.Config = (function() {
                 }
             },
         },
+        // humidity axis
+        "humidity" : {
+            axisId : "humidityAxis",
+            unit : Config.fieldDefaults.outHumidity.unit,
+            highstockAxisOptions : {
+                title: {
+                    text: 'Humidity',
+                    style: {
+                           color: '$out_humidity',
+                           fontWeight: 'bold'
+                    }
+                },
+                offset: 10,
+                opposite: false,
+                height : 25+'%',
+                top : 75+'%',
+                min: 0,
+                max: 100,
+                tickInterval: 25,
+            },
+        },
         // rain axis
         "rain" : {
             axisId : "rainAxis",
@@ -229,40 +250,21 @@ mesowx.Config = (function() {
             axisId : "rainRateAxis",
             unit : Config.fieldDefaults.rainRate.unit,
             highstockAxisOptions : {
-                //title: {
-                //    text: 'Rain Rate',
-                //    style: {
-                //           color: '$rain_rate',
-                //           fontWeight: 'bold'
-                //    }
-                //},
-                offset: -100,
+                title: { // skip the title as it crowds the axis
+                    //text: 'Rain Rate',
+                    text: '',
+                    style: {
+                           color: '$rain_rate',
+                           fontWeight: 'bold'
+                    }
+                },
+                //offset: -100,
+                offset: -80,
                 height : 25+'%',
                 top : 75+'%',
                 minorTickInterval: 'auto',
                 minorGridLineColor: '#F0F0F0',
                 min: 0,
-            },
-        },
-        // humidity axis
-        "humidity" : {
-            axisId : "humidityAxis",
-            unit : Config.fieldDefaults.outHumidity.unit,
-            highstockAxisOptions : {
-                title: {
-                    text: 'Humidity',
-                    style: {
-                           color: '$out_humidity',
-                           fontWeight: 'bold'
-                    }
-                },
-                offset: 10,
-                opposite: false,
-                height : 25+'%',
-                top : 75+'%',
-                min: 0,
-                max: 100,
-                tickInterval: 25,
             },
         },
     };
@@ -280,10 +282,12 @@ mesowx.Config = (function() {
             highstockSeriesOptions : {
                 color: '$out_temp',
                 lineWidth: 1,
-                zIndex: 0, // so it's above wind chill & heat index
+                visible: $out_bool, // false is the default, the hidden state
             },
             statsFlagsHighstockSeriesOptions : {
-                zIndex: 110 // display above the windchill and heat index flags
+                color: '$out_temp',
+                clip: false, // allow flags to display on chart boundaries
+                visible: $out_bool,
             }
         },
         // in temp
@@ -293,7 +297,13 @@ mesowx.Config = (function() {
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
                 color: '$in_temp',
-                visible: false // default to hidden state
+                visible: $int_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$in_temp',
+                clip: false,
+                //zIndex: 2, // display above the windchill and heat index flags
+                visible: $int_bool,
             }
         },
         // out dewpoint
@@ -303,7 +313,13 @@ mesowx.Config = (function() {
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
                 color: '$dew_point',
-                visible: false, // default to hidden state
+                visible: $dp_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$dew_point',
+                clip: false,
+                stackDistance: 30,
+                visible: $dp_bool,
             }
         },
         // wind chill
@@ -313,9 +329,15 @@ mesowx.Config = (function() {
             stats : [meso.Stat.min],
             highstockSeriesOptions : {
                 color: '$wind_chill',
-                visible: false, // default to hidden state
                 dashStyle: 'ShortDashDot',
-                zIndex: -5 // so it's underneath out temp
+                zIndex: 1, // so it's underneath out temp
+                visible: $wc_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_chill',
+                clip: false,
+                //zIndex: 1, // display above the windchill and heat index flags
+                visible: $wc_bool,
             }
         },
         // heat index
@@ -326,7 +348,15 @@ mesowx.Config = (function() {
             highstockSeriesOptions : {
                 color: '$heat_index',
                 dashStyle: 'ShortDashDot',
-                zIndex: -5 // so it's underneath out temp
+                zIndex: 0, // so it's underneath out temp
+                visible: $hi_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$heat_index',
+                clip: false,
+                //zIndex: 0 // display above the windchill and heat index flags
+                stackDistance: 30,
+                visible: $hi_bool,
             }
         },
         // barometer
@@ -337,6 +367,12 @@ mesowx.Config = (function() {
             highstockSeriesOptions : {
                 color: '$bar_ometer',
                 dashStyle: 'ShortDot',
+                visible: $bar_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$bar_ometer',
+                clip: false,
+                visible: $bar_bool,
             }
         },
         // wind speed
@@ -345,7 +381,13 @@ mesowx.Config = (function() {
             axis : 'windSpeedAxis',
             stats : [meso.Stat.max],
             highstockSeriesOptions : {
-                color: '$wind_speed'
+                color: '$wind_speed',
+                visible: $ws_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_speed',
+                clip: false,
+                visible: $ws_bool,
             }
         },
         // wind dir
@@ -353,7 +395,12 @@ mesowx.Config = (function() {
             fieldDef : Config.fieldDefaults.windDir,
             axis : 'windDirAxis',
             highstockSeriesOptions : {
-                color: '$wind_dir'
+                color: '$wind_dir',
+                visible: $wd_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_dir',
+                visible: $wd_bool,
             }
         },
         // wind gust speed
@@ -363,8 +410,13 @@ mesowx.Config = (function() {
             stats : [meso.Stat.max],
             highstockSeriesOptions : {
                 color: '$wind_gust',
-                //lineWidth: 0 // will appear on mouse hover
-                visible: false // default to hidden state
+                //lineWidth: 0, // will appear on mouse hover
+                visible: $wg_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_gust',
+                clip: false,
+                visible: $wg_bool,
             }
         },
         // wind gust dir
@@ -374,17 +426,29 @@ mesowx.Config = (function() {
             highstockSeriesOptions : {
                 color: '$wind_gustdir',
                 dashStyle: 'ShortDashDot',
-                visible: false // default to hidden state
+                lineWidth: 0, // will appear on mouse hover
+                visible: $wgd_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$wind_gustdir',
+                visible: $wgd_bool,
             }
         },
-        // day rain
+        #if $davis_dayrain
+        // day rain // disabled as it screws with the flag display when 'visible: false' on everything else
         "dayRain" : {
             fieldDef : Config.fieldDefaults.dayRain,
             axis : 'rainAxis',
             highstockSeriesOptions : {
-                color: '$day_rain'
+                color: '$day_rain',
+                visible: $drn_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$day_rain',
+                visible: $drn_bool,
             }
         },
+        #end if
         // rain
         "rain" : {
             fieldDef : Config.fieldDefaults.rain,
@@ -392,7 +456,12 @@ mesowx.Config = (function() {
             highstockSeriesOptions : {
                 type : 'column',
                 width: '1',
-                color: '$r_ain'
+                color: '$r_ain',
+                visible: $rn_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$r_ain',
+                visible: $rn_bool,
             }
         },
         // rain rate
@@ -402,8 +471,12 @@ mesowx.Config = (function() {
             stats : [meso.Stat.max],
             highstockSeriesOptions : {
                 color: '$rain_rate',
-                //lineWidth: 0 // will appear on mouse hover
-                visible: false // default to hidden state
+                visible: $rnr_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$rain_rate',
+                clip: false,
+                visible: $rnr_bool,
             }
         },
         // out humidity
@@ -412,7 +485,13 @@ mesowx.Config = (function() {
             axis : 'humidityAxis',
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
-                color: '$out_humidity'
+                color: '$out_humidity',
+                visible: $outh_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$out_humidity',
+                clip: false,
+                visible: $outh_bool,
             }
         },
         // in humidity
@@ -422,7 +501,12 @@ mesowx.Config = (function() {
             stats : [meso.Stat.min, meso.Stat.max],
             highstockSeriesOptions : {
                 color: '$in_humidity',
-                visible: false // default to hidden state
+                visible: $inh_bool,
+            },
+            statsFlagsHighstockSeriesOptions : {
+                color: '$in_humidity',
+                clip: false,
+                visible: $inh_bool,
             }
         }
     };
@@ -445,25 +529,27 @@ mesowx.Config = (function() {
             Config.chartDefaults.yAxes.barometer,
             Config.chartDefaults.yAxes.windspeed,
             Config.chartDefaults.yAxes.winddir,
-            // Uncomment the following line and the dayRain series below if you have a Davis station and want to display it
-            //Config.chartDefaults.yAxes.rain,
+            Config.chartDefaults.yAxes.rain,
             Config.chartDefaults.yAxes.rainrate,
             Config.chartDefaults.yAxes.humidity,
         ],
         // the data to display (note: the axis of any series listed here must also be included as a y-axis)
         series : [
             Config.chartDefaults.series.outTemp,
+            Config.chartDefaults.series.inTemp,
             Config.chartDefaults.series.heatindex,
             Config.chartDefaults.series.windchill,
             Config.chartDefaults.series.dewpoint,
             Config.chartDefaults.series.barometer,
             Config.chartDefaults.series.windSpeed,
             Config.chartDefaults.series.windDir,
-            // Uncomment the following line and the rain axis above if you have a Davis station and want to display it
-            //Config.chartDefaults.series.dayRain,
+            // The following line is applicable to a Davis station. If you have one you set to true in skin.conf.
+          #if $davis_dayrain
+            Config.chartDefaults.series.dayRain,
+          #end if
+            Config.chartDefaults.series.rain,
             Config.chartDefaults.series.rainRate,
             Config.chartDefaults.series.outHumidity,
-            Config.chartDefaults.series.inTemp,
             Config.chartDefaults.series.inHumidity,
         ],
         // see http://api.highcharts.com/highstock
@@ -526,25 +612,27 @@ mesowx.Config = (function() {
             Config.chartDefaults.yAxes.barometer,
             Config.chartDefaults.yAxes.windspeed,
             Config.chartDefaults.yAxes.winddir,
-            // Uncomment the following line and the dayRain series below if you have a Davis station and want to display it
-            //Config.chartDefaults.yAxes.rain,
+            Config.chartDefaults.yAxes.rain,
             Config.chartDefaults.yAxes.rainrate,
             Config.chartDefaults.yAxes.humidity,
         ],
-        // the data to display (note: the axis of any seires listed here must also be included as a y-axis)
+        // the data to display (note: the axis of any series listed here must also be included as a y-axis)
         series : [
             Config.chartDefaults.series.outTemp,
+            Config.chartDefaults.series.inTemp,
             Config.chartDefaults.series.heatindex,
             Config.chartDefaults.series.windchill,
             Config.chartDefaults.series.dewpoint,
             Config.chartDefaults.series.barometer,
             Config.chartDefaults.series.windSpeed,
             Config.chartDefaults.series.windDir,
-            // Uncomment the following line and the rain axis above if you have a Davis station and want to display it
-            //Config.chartDefaults.series.dayRain,
+            // The following line is applicable to a Davis station. If you have one you set to true in skin.conf.
+          #if $davis_dayrain
+            Config.chartDefaults.series.dayRain,
+          #end if
+            Config.chartDefaults.series.rain,
             Config.chartDefaults.series.rainRate,
             Config.chartDefaults.series.outHumidity,
-            Config.chartDefaults.series.inTemp,
             Config.chartDefaults.series.inHumidity,
         ],
         // see http://api.highcharts.com/highstock
@@ -604,9 +692,10 @@ mesowx.Config = (function() {
             Config.chartDefaults.yAxes.rainrate,
             Config.chartDefaults.yAxes.humidity,
         ],
-        // the data to display (note: the axis of any seires listed here must also be included as a y-axis)
+        // the data to display (note: the axis of any series listed here must also be included as a y-axis)
         series : [
             Config.chartDefaults.series.outTemp,
+            Config.chartDefaults.series.inTemp,
             Config.chartDefaults.series.heatindex,
             Config.chartDefaults.series.windchill,
             Config.chartDefaults.series.dewpoint,
@@ -618,7 +707,6 @@ mesowx.Config = (function() {
             Config.chartDefaults.series.rain,
             Config.chartDefaults.series.rainRate,
             Config.chartDefaults.series.outHumidity,
-            Config.chartDefaults.series.inTemp,
             Config.chartDefaults.series.inHumidity,
         ],
         // see http://api.highcharts.com/highstock
@@ -671,26 +759,31 @@ mesowx.Config = (function() {
         // By default, the data value is rendered into the HTML element with the class name convention: '<id>-value' (e.g. 'outTemp-value') and
         // will visually indicate whether the value went up or down since the last update. This can be changed or disabled by specifying a
         // different 'valueDisplayManagerFactory' such as the meso.MesoConsole.SimpleValueDisplayManagerFactory which will only update the
-        // value without any other change indication. If present, the field's unit suffix label will be rendered into the HTML element with 
+        // value without any other change indication. If present, the field's unit suffix label will be rendered into the HTML element with
         // the class name convetion: '<id>-unit' (eg. 'outTemp-unit'). A function to format the value can be optionally specified as seen below.
         fields: [
             { fieldDef: Config.fieldDefaults.outTemp, id: 'outTemp' },
             { fieldDef: Config.fieldDefaults.dewpoint },
+          #if $console_intemp
+            { fieldDef: Config.fieldDefaults.inTemp, },
+          #end if
+          #if $console_inhum
+            { fieldDef: Config.fieldDefaults.inHumidity },
+          #end if
+          #if $davis_dayrain
             { fieldDef: Config.fieldDefaults.dayRain },
+          #end if
             { fieldDef: Config.fieldDefaults.rainRate, id: 'rainRate' },
             { fieldDef: Config.fieldDefaults.outHumidity },
             { fieldDef: Config.fieldDefaults.heatindex, id: 'heatindex' },
             { fieldDef: Config.fieldDefaults.windchill, id: 'windchill' },
             { fieldDef: Config.fieldDefaults.barometer },
-            { fieldDef: Config.fieldDefaults.windSpeed },
-            { fieldDef: Config.fieldDefaults.windDir },
-
             /*{ fieldDef: Config.fieldDefaults.windSpeed },
             {
                 fieldDef: Config.fieldDefaults.windDir,
                 valueFormatter : Config.defaultDegreeToCardinalTextConverter,
                 valueDisplayManagerFactory: meso.MesoConsole.SimpleValueDisplayManagerFactory
-            }*/
+            },*/
             {
                 fieldDef: Config.fieldDefaults.dateTime,
                 valueFormatter : function(value) {

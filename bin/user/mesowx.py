@@ -41,7 +41,7 @@ from weewx.engine import StdService
 from weewx.cheetahgenerator import SearchList
 import weeutil.weeutil
 
-VERSION = "0.6.2"
+VERSION = "0.6.3"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -80,13 +80,15 @@ except ImportError:
 if weewx.__version__ < "4":
     raise weewx.UnsupportedFeature("weewx 4 is required, found %s" %
                                    weewx.__version__)
-
+# FIXME
+# Should fetch schema from weewx.conf! bin/schemas
 schema = [
     ('dateTime', 'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
     ('usUnits', 'INTEGER NOT NULL'),
     ('barometer', 'REAL'),
     ('pressure', 'REAL'),
     ('altimeter', 'REAL'),
+    #('appTemp', 'REAL'),
     ('inTemp', 'REAL'),
     ('outTemp', 'REAL'),
     ('inHumidity', 'REAL'),
@@ -1175,41 +1177,80 @@ class Mesowx(SearchList):
         wee_units = self.generator.config_dict['StdConvert'].get(
                          'target_unit', 'METRICWX')
 
-        # surely there is an easier way?
-        chart_colors = self.generator.skin_dict.get('ChartColors',{})
-        #loginf("Chart Colors are %s" % chart_colors)
-        for _k, _i in chart_colors.items():
-            if "out_temp" in _k:
-                self.out_temp = _i
-            elif "bar_ometer" in _k:
-                self.bar_ometer = _i
-            elif "wind_speed" in _k:
-                self.wind_speed = _i
-            elif "wind_dir" in _k:
-                self.wind_dir = _i
-            elif "r_ain" in _k:
-                self.r_ain = _i
-            elif "rain_rate" in _k:
-                self.rain_rate = _i
-            elif "out_humidity" in _k:
-                self.out_humidity = _i
-            elif "in_temp" in _k:
-                self.in_temp = _i
-            elif "dew_point" in _k:
-                self.dew_point = _i
-            elif "wind_chill" in _k:
-                self.wind_chill = _i
-            elif "heat_index" in _k:
-                self.heat_index = _i
-            elif "wind_gustdir" in _k:
-                self.wind_gustdir = _i
-            elif "wind_gust" in _k:
-                self.wind_gust = _i
-            elif "day_rain" in _k:
-                self.day_rain = _i
-            elif "in_humidity" in _k:
-                self.in_humidity = _i
-        #loginf("in_humidity is %s" % self.in_humidity)
+
+        def allot_colors():
+            for _k, _i in chart_colors.items():
+                if "out_temp" in _k:
+                    self.out_temp = _i
+                elif "bar_ometer" in _k:
+                    self.bar_ometer = _i
+                elif "wind_speed" in _k:
+                    self.wind_speed = _i
+                elif "wind_dir" in _k:
+                    self.wind_dir = _i
+                elif "r_ain" in _k:
+                    self.r_ain = _i
+                elif "rain_rate" in _k:
+                    self.rain_rate = _i
+                elif "out_humidity" in _k:
+                    self.out_humidity = _i
+                elif "in_temp" in _k:
+                    self.in_temp = _i
+                elif "dew_point" in _k:
+                    self.dew_point = _i
+                elif "wind_chill" in _k:
+                    self.wind_chill = _i
+                elif "heat_index" in _k:
+                    self.heat_index = _i
+                elif "wind_gustdir" in _k:
+                    self.wind_gustdir = _i
+                elif "wind_gust" in _k:
+                    self.wind_gust = _i
+                elif "day_rain" in _k:
+                    self.day_rain = _i
+                elif "in_humidity" in _k:
+                    self.in_humidity = _i
+            return
+
+        chart_colors = self.generator.skin_dict.get('ChartColors', {})
+
+        # Fetch one of two default color pallets, or use a configurable set
+        color_default_a = weeutil.weeutil.to_bool(self.generator.skin_dict[
+                          'ChartColors'].get('colorset_a', 'false'))
+        color_default_b = weeutil.weeutil.to_bool(self.generator.skin_dict[
+                          'ChartColors'].get('colorset_b', 'false'))
+        # the third, itemized option is the last 'else:' option
+
+        if color_default_a:
+            chart_colors = {'out_temp': '#2f7ed8',  'bar_ometer': '#0d233a',
+                            'wind_speed': '#8bbc21', 'wind_dir': '#910000',
+                            'r_ain': '#1aadce', 'rain_rate': '#492970',
+                            'out_humidity': '#f28f43', 'in_temp': '#77a1e5',
+                            'dew_point': '#c42525', 'wind_chill': '#a6c96a',
+                            'heat_index': '#4572A7', 'wind_gust': '#AA4643',
+                            'wind_gustdir': '#89A54E', 'day_rain': '#80699B',
+                            'in_humidity': '#3D96AE'}
+            # logdbg("Using chart_color_a which  are %s : %s" % (
+            #                             color_default_a, chart_colors))
+            allot_colors()
+        elif color_default_b:
+            chart_colors = {'out_temp': '#DB843D', 'bar_ometer': '#92A8CD',
+                            'wind_speed': '#A47D7C', 'wind_dir': '#B5CA92',
+                            'r_ain': '#7cb5ec', 'rain_rate': '#434348',
+                            'out_humidity': '#90ed7d', 'in_temp':  '#f7a35c',
+                            'dew_point': '#8085e9', 'wind_chill':  '#f15c80',
+                            'heat_index': '#e4d354', 'wind_gust': '#2b908f',
+                            'wind_gustdir': '#f45b5b', 'day_rain': '#91e8e1',
+                            'in_humidity': ' #2f7ed8'}
+            # logdbg("Using chart_color_b which are %s : %s" % (
+            #                             color_default_b, chart_colors))
+            allot_colors()
+        else:
+            chart_colors = self.generator.skin_dict.get('ChartColors', {})
+            # logdbg("Using chart_color c are %s" % chart_colors)
+            allot_colors()
+
+        # logdbg("in_humidity is %s" % self.in_humidity) # quick sanity check
 
         # single digit entries (p_f, m_f) are decimal place format instructions
         if 'US' in wee_units:
@@ -1236,6 +1277,71 @@ class Mesowx(SearchList):
             self.m_f = '1'
             self.speed = 'kph'
             self.rainR = 'cmHr'
+
+        def js_bool(_i):
+            # shamelessly ripped of from weeutils.to_bool and adjusted to
+            # return all lowercase. This ensures Config.js.tmpl accepts the
+            # values without complaining. It's javascipt rules over there.
+            # In this instance we need eg:- 'false', not 'False'!
+            try:
+                if _i.lower() in ['true', 'yes', 'y']:
+                    return 'true'
+                elif _i.lower() in ['false', 'no', 'n']:
+                    return 'false'
+                else:
+                    loginf("Invalid value: \"%s\" in [ChartVisible] section"
+                           "of Mesowx/skin.conf using 'false' instead" % _i)
+                    return 'false'
+            except AttributeError as e:
+                loginf("AttributeError as %s" % e)
+
+        chart_visible = self.generator.skin_dict.get('ChartVisible', {})
+        for _k, _i in chart_visible.items():
+            if "outtemp_sw" in _k:
+                # one chart has to be enabled for highcharts to start
+                # properly. This is the annointed one, an completely arbitary
+                # choice except that it should always have data!
+                # self.out_bool = js_bool(_i)
+                self.out_bool = 'true'
+            elif "intemp_sw" in _k:
+                self.int_bool = js_bool(_i)
+            elif "dewpoint_sw" in _k:
+                self.dp_bool = js_bool(_i)
+            elif "heatindex_sw" in _k:
+                self.hi_bool = js_bool(_i)
+            elif "windchill_sw" in _k:
+                self.wc_bool = js_bool(_i)
+            elif "barometer_sw" in _k:
+                self.bar_bool = js_bool(_i)
+            elif "windspeed_sw" in _k:
+                self.ws_bool = js_bool(_i)
+            elif "winddir_sw" in _k:
+                self.wd_bool = js_bool(_i)
+            elif "windgust_sw" in _k:
+                self.wg_bool = js_bool(_i)
+            elif "windgustdir_sw" in _k:
+                self.wgd_bool = js_bool(_i)
+            elif "dayrain_sw" in _k:
+                self.drn_bool = js_bool(_i)
+            elif "rain_sw" in _k:
+                self.rn_bool = js_bool(_i)
+            elif "rainrate_sw" in _k:
+                self.rnr_bool = js_bool(_i)
+            elif "outhumidity_sw" in _k:
+                self.outh_bool = js_bool(_i)
+            elif "inhumidity_sw" in _k:
+                self.inh_bool = js_bool(_i)
+
+        # mesowx console sections
+        self.console_intemp = weeutil.weeutil.to_bool(self.generator.skin_dict[
+                             'Extras'].get('console_intemp', 'false'))
+        self.console_inhum = weeutil.weeutil.to_bool(self.generator.skin_dict[
+                             'Extras'].get('console_inhumidity', 'false'))
+
+        # Davis weather station specific value
+        self.davis_dayrain = weeutil.weeutil.to_bool(self.generator.skin_dict[
+                             'Extras'].get('davis_dayrain', 'false'))
+        # loginf("davis_dayrain is %s" % self.davis_dayrain)
 
         # the wee_extension install process will create 2 unique keys and add
         # them to weewx.conf. Change them if you like but the psuedo warranty

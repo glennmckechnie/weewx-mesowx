@@ -1,13 +1,32 @@
 
 **Jun 2020:  Weewx and wee_extension -- DONE!**
 
-The move to use _wee_extension_ for the installation process is done. This, along with various updates and easier configuration gives a working default local installation and a far easier process to set up a remote installation (move a directory, rename one file). Testing and feedback is always welcome...
+The move to use *wee_extension* for the installation process is done. This, along with various updates and easier configuration gives a working default local installation and a far easier process to set up a remote installation (move a directory, rename one file). Testing and feedback is always welcome...
 
 More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It's not dead yet (it's just sleeping squire.)
 
-**It's still June 2020**
+**23rd June 2020**
 
-Updated the d3, jquery, and highstock libraries. Released as [version 0.6.2](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.2)
+### Better Bling!
+
+Released as [version 0.6.3](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.3)
+
+* flag (stats - min/max) colors are now the same as the line colors. They should also be
+    visible when near the boundaries (clip : false)
+* add optional inTemp and inHumidity sections to mesowx console. We have the room, if we
+    have the fields...
+* re-add rain to charts. Make dayRain a configurable option from skin.conf (untested, don't
+    have one, feed back welcomed!)
+* Ratchet up the user configuration in skin.con - 2 default pallets and the previous user
+    configurable one
+* add chart visibility options to skin.conf. All but inTemp are 'on' to start with.
+    outTemp is always on (otherwise the chart generation errors and we get nowhere)
+* add modules/exporting.js to add print menu (top right hamburger style)
+* there's still an issue with the Humidity flags.
+
+----
+
+Updated the d3, jquery, and highstock libraries.
 
 Adjust css, _index.html_ and _Config.js_ to improve screen usage and allow dynamic rescaling.
 
@@ -28,7 +47,7 @@ MesoWx is a real-time HTML front-end for visualizing personal weather station da
 
 MesoWx displays data from a database and does not itself interface with any weather station hardware directly, however, being built upon Meso it supports an HTTP API for remotely adding data, which allows integration with existing weather station software. MesoWx integrates well with Weewx and should support any weather station that it supports.
 
-![v0.6.0-1month-archive](lirpa/images/v0.6.2-1month-archive.png)
+![v0.6.3-1month-archive](lirpa/images/v0.6.3-1month-archive.png)
 ![Samsung-landscape.png](lirpa/images/Samsung-landscape.png)
 
 **June 2020:** Time has passed and there are many more excellent and capable skins available for weewx now. They have evolved with the community and are not only well integrated with weewx but feature packed. This one lacks the bells and whistles but is still quite capable at conveying the collected information, thanks to highcharts, decent hardware :-) and access to the whole database.
@@ -39,11 +58,12 @@ MesoWx displays data from a database and does not itself interface with any weat
 This repo started with the 0.4.0 version which was the latest available on the 1st February 2018. It has been copied here to enable integration with Luc's raw.py and sync.py scripts
 No license was available at the time of upload but Peter Finley (MesoWx author) has indicated that it is [free to use](https://groups.google.com/d/msg/meso-user/ebs6sOhNqsg/iNeqnVarEgAJ)
 
-The lirpa directory now contains the updated scripts as written by Luc Heijst and were rewritten to keep pace with either the changes in weewx versions, or issues that arose and were reported by weewx users.
-Some of those scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded here as individual commits so viewing the commit history of this repo will show the history. Not all commits are working versions, the latest should be okay though.
+The lirpa directory now contains the updated scripts as written by Luc Heijst and that were updated/rewritten to keep pace with either the changes in weewx versions, or issues that arose and were reported by weewx users.
+Some of those scripts are available in various posts on the weewx-users group. The versions that Luc passed on have been uploaded here as individual commits so viewing the commit history of this repo will show some of the history of the mesowx scripts, after the lirpa repo stopped  development.
 
-Those scripts and associated contents will be incorporated into a skin that is installable using _wee_extension_.
-This repo is not intended to replace the original Lirpa (bitbucket) repo, rather it's an opportunity to keep it (or at least MesoWx) alive and current.
+Those scripts and associated contents have been tweaked to enable the weewx installer to control the installation process. The use of wee_extension vastly improves the installation process and mesowx configuration and should go someway towards keeping MesoWx alive and current.
+
+Previously it took a lot of effort to modify Mesowx to personal taste. The default local (Raw) installation will just run once installed and the RemoteSync version is in a state where a cut, paste and a file rename will get it into a working state (the database setup does involve a few more steps. Ah well!) Configuration is predominately via _weewx.conf_ and _skin.conf_
 
 ## Limitations
 
@@ -53,11 +73,9 @@ This repo is not intended to replace the original Lirpa (bitbucket) repo, rather
 
 ## Warnings
 
-This software is dated, but still functional. It fills a niche for me, and possibly for others. It was also a long term objective on my part to see if it could be managed by _wee_extension_. That's one itch scratched!
+This software may be dated, but it is still functional. It fills a niche for me, and possibly for others. It was also a long term objective on my part to see if it could be managed by *wee_extension*, and that's one itch that has now been scratched!
 
-It can take some effort to modify Mesowx to personal taste, but the actual installation process is far easier under the guidance of _wee_extension_ than it was in the past. The default local (Raw) installation should just run once installed.
-
-The old caveat of there being **NO** update path still applies. However the new script - _mesowx.py_ - hasn't really changed that much, just the way it's called. If you have a working install then don't blow that away, the script should still work with it, you'll just need to call different sections of it.
+The old caveat of there being **NO** update path still applies. However the new script - _mesowx.py_ - hasn't really changed that much, only the way it's called. If you have a working install then don't blow that away, the script should still work with it, you'll just need to call different sections of it if you decide to update to this weewx4/python3 compatible version.
 So, Backup your existing version, don't overwrite it. Install this one in parallel, in its new location, and then copy your changes over. If it's index.html changes then a drop in could work. If it's the config files then weewx.conf will need tweaking. If it's the script then you'll need some python knowledge to sort out the redirection.
 
 If that all seems too hard then contact me via github and we'll see what we can work out.
@@ -67,9 +85,9 @@ If that all seems too hard then contact me via github and we'll see what we can 
 # Weewx and wee_extension -- DONE!
 
 **Jun 2020**
-The move to weewx via _wee_extension_ is done, it needs some beta testing...
+The move to weewx via *wee_extension* is done, it needs some beta testing...
 
-_wee_extension_ will install and configure this skin as much as it can. More could be done with the integration and with support and contributions from the community that could still happen.
+*wee_extension* will install and configure this skin as much as it can. More could be done with the integration and with support and contributions from the community that could still happen.
 
 The 3 original mesowx scripts have been combined into one script which are all installed as a SLE - a skin named Mesowx, a script named _mesowx.py_ and a database named mesowx.
 
@@ -116,7 +134,7 @@ The **data_limit** is the number of hours of records to keep in the raw database
             data_binding = mesowx_binding
             data_limit = 48
             skip_loop = 2
-            
+
 ChartColors is a dict of values in the _Mesowx/skin.conf_ file which are used by the SLE (CheetahGenerator ) to populate the colors in _skins/Mesowx/js/Config.js.tmpl_, which then becomes _mesowx/js/Config.js_
 You can now easily get rid of my values and choose your own!
 
