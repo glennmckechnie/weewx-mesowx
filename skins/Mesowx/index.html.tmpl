@@ -79,8 +79,8 @@
                 <span class="outHumidity-value reading-value"></span> <span class="outHumidity-unit unit-label"></span>
                 <span class="desc">outside humidity</span>
                 #if $console_inhum
-                <span class="inHumidity-value reading-value"></span><span class="inHumidity-unit unit-label"></span>
-                <span class="desc">inside humidity</span>
+                    <span class="inHumidity-value reading-value"></span><span class="inHumidity-unit unit-label"></span>
+                    <span class="desc">inside humidity</span>
                 #end if
             </div>
             <div class="bar-group reading-group">
@@ -93,14 +93,16 @@
 
                     If you have a station that supplies the dayRain field (e.g. Davis) and want to display
                     it (along with dynamic hiding/showing of the rain rate depending on if it's raining),
-                    simply comment out the following line and remove the comments around the commented two
-                    lines below it.
+                    use the davis_dayrain = 'true' option in skin.conf to enable it here, and elsewhere.
+                    Caveat: untested by me, column must exist in database, mesowx.py schema needs adjusting.
                 -->
-                <span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span>
-                <!--
-                <span class="dayRain-value reading-value"></span> <span class="dayRain-unit unit-label"></span>
-                <div class="rainRate-container"><span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span></div>
-                -->
+                #if not $day_rain
+                 <span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span>
+                #end if
+                #if $day_rain
+                 <span class="dayRain-value reading-value"></span> <span class="dayRain-unit unit-label"></span>
+                 <div class="rainRate-container"><span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span></div>
+                #end if
                 <span class="desc">rain</span>
             </div>
             <div class="last-update"> <span class="dateTime-value"></span></div>

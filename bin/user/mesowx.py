@@ -98,7 +98,8 @@ schema = [
     ('windGust', 'REAL'),
     ('windGustDir', 'REAL'),
     ('rainRate', 'REAL'),
-    ('rain', 'REAL'),  # rain, was: dayRain
+    ('rain', 'REAL'),
+    #('dayrain', 'REAL'),  # dayRain for DAVIS stations
     ('dewpoint', 'REAL'),
     ('windchill', 'REAL'),
     ('heatindex', 'REAL'),
