@@ -25,7 +25,8 @@ Released as [version 0.6.3](https://github.com/glennmckechnie/weewx-mesowx/relea
 * add chart visibility options to skin.conf. All but inTemp are 'on' to start with.
     outTemp is always on (otherwise the chart generation errors and we get nowhere)
 * add modules/exporting.js to add print menu (top right hamburger style)
-* there's still an issue with the Humidity flags.
+* there's still an issue #4 with the Humidity flags staying visible
+* tweak dayRain config option (untested - no Davis here)
 
 ----
 

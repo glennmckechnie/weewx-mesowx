@@ -17,6 +17,7 @@
     outTemp is always on (otherwise the chart generation errors and we get nowhere)
 * add modules/exporting.js to add print menu (top right hamburger style)
 * there's still an issue with the Humidity flags when the lines are hidden ??
+* tweak dayRain config option (untested)
 
 ## 0.6.2 (2020-06-18) ##
 
