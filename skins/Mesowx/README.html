@@ -29,10 +29,13 @@
 <p><strong>Jun 2020:  Weewx and wee_extension &ndash; DONE!</strong></p>
 <p>The move to use <em>wee_extension</em> for the installation process is done. This, along with various updates and easier configuration gives a working default local installation and a far easier process to set up a remote installation (move a directory, rename one file). Testing and feedback is always welcome&hellip;</p>
 <p>More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It&rsquo;s not dead yet (it&rsquo;s just sleeping squire.)</p>
-<p><strong>23rd June 2020</strong></p>
+<p><strong>25th June 2020</strong></p>
 <h3>Better Bling!</h3>
 <p>Released as <a href="https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.3">version 0.6.3</a></p>
 <ul>
+<li>split unit configuration into database (auto via weewx.conf) <strong>and</strong> display
+    (manual via skin.conf)</li>
+<li>issues ref #2 : change displayed unit inHg for barometer to &lsquo;inHg&rsquo; instead of &lsquo;in&rsquo;</li>
 <li>flag (stats - min/max) colors are now the same as the line colors. They should also be
     visible when near the boundaries (clip : false)</li>
 <li>add optional inTemp and inHumidity sections to mesowx console. We have the room, if we

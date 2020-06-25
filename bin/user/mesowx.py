@@ -828,7 +828,8 @@ class RawSyncThread(SyncThread):
                 raw_record = self.queue.get()
                 # a value of None is a signal to exit
                 if raw_record is None:
-                    logdbg("remote raw: exit event signaled, exiting queue loop")
+                    logdbg("remote raw: exit event signaled, exiting "
+                           "queue loop")
                     raise AbortAndExit
                 self.debug_count += 1
                 if self.debug_count <= self.max_times_to_print:
@@ -903,7 +904,8 @@ class ArchiveSyncThread(SyncThread):
                 archive_record = self.queue.get()
                 # a value of None is a signal to exit
                 if archive_record is None:
-                    logdbg("remote archive: exit event signaled, exiting queue loop")
+                    logdbg("remote archive: exit event signaled, "
+                           "exiting queue loop")
                     raise AbortAndExit
                 logdbg("remote archive: get record %s; last synced %s" %
                        (weeutil.weeutil.timestamp_to_string(
@@ -1177,7 +1179,6 @@ class Mesowx(SearchList):
         wee_units = self.generator.config_dict['StdConvert'].get(
                          'target_unit', 'METRICWX')
 
-
         def allot_colors():
             for _k, _i in chart_colors.items():
                 if "out_temp" in _k:
@@ -1219,7 +1220,8 @@ class Mesowx(SearchList):
                           'ChartColors'].get('colorset_a', 'false'))
         color_default_b = weeutil.weeutil.to_bool(self.generator.skin_dict[
                           'ChartColors'].get('colorset_b', 'false'))
-        # the third, itemized option is the last 'else:' option
+        # the third, itemized option is the last 'else:' option and is user
+        # configurable.
 
         if color_default_a:
             chart_colors = {'out_temp': '#2f7ed8',  'bar_ometer': '#0d233a',
@@ -1252,31 +1254,102 @@ class Mesowx(SearchList):
 
         # logdbg("in_humidity is %s" % self.in_humidity) # quick sanity check
 
-        # single digit entries (p_f, m_f) are decimal place format instructions
+        # database units and display units may differ
+        """
+        Units that are available in Units.class.php
+        along with the chosen target / base and according to weewx
+        US, Metric, MetricWX
+        f , c , c
+        inHg , (mb , hPa), mmHg , kPa
+        in , cm , mm
+        inHr , cmHr , mmHr
+        mph , kph , mps  : knot
+        deg, deg, deg
+        perc, perc, perc
+        s , ms
+        """
+        # single digit entries (p_f, m_f, rr_f) are decimal format instructions
         if 'US' in wee_units:
-            self.degr = 'f'
-            self.press = 'inHg'
-            self.p_f = '3'
-            self.meas = 'in'
-            self.m_f = '2'
-            self.speed = 'mph'
-            self.rainR = 'inHr'
+            self.degr = self.disp_degr = 'f'
+            self.press = self.disp_press = 'inHg'
+            self.p_f = self.disp_p_f = '3'
+            self.meas = self.disp_meas = 'in'
+            self.m_f = self.disp_m_f = '2'
+            self.speed = self.disp_speed = 'mph'
+            self.rainR = self.disp_rainR = 'inHr'
+            self.rr_f = self.disp_rr_f = '2'
         elif 'METRICWX' in wee_units:
-            self.degr = 'c'
-            self.press = 'hPa'
-            self.p_f = '1'
-            self.meas = 'mm'
-            self.m_f = '1'
-            self.speed = 'mps'
-            self.rainR = 'mmHr'
+            self.degr = self.disp_degr = 'c'
+            self.press = self.disp_press = 'hPa'
+            self.p_f = self.disp_p_f = '3'
+            self.meas = self.disp_meas = 'mm'
+            self.m_f = self.disp_m_f = '1'
+            self.speed = self.disp_speed = 'mps'
+            self.rainR = self.disp_rainR = 'mmHr'
+            self.rr_f = self.disp_rr_f = '1'
         else:  # it must be METRIC !
-            self.degr = 'c'
-            self.press = 'hPa'
-            self.p_f = '1'
-            self.meas = 'cm'
-            self.m_f = '1'
-            self.speed = 'kph'
-            self.rainR = 'cmHr'
+            self.degr = self.disp_degr = 'c'
+            self.press = self.disp_press = 'hPa'
+            self.p_f = self.disp_p_f = '1'
+            self.meas = self.disp_meas = 'cm'
+            self.m_f = self.disp_m_f = '1'
+            self.speed = self.disp_speed = 'kph'
+            self.rainR = self.disp_rainR = 'cmHr'
+            self.rr_f = self.disp_rr_f = '1'
+
+        # fallback to the database units above if these next ones (used in
+        # the actual display) are missing or foobar'd
+        #
+        # these are from meso/include/Units.class.php
+        available_units = ('f', 'c', 'inHg', 'mb', 'hPa', 'mmHg',
+                           'kPa', 'in', 'cm', 'mm', 'inHr', 'cmHr',
+                           'mmHr', 'mph', 'kph', 'mps', 'knot')
+        # degrees
+        disp_degr = self.generator.skin_dict['Units'].get(
+                                               'display_temp', self.degr)
+        if disp_degr in available_units:
+            self.disp_degr = disp_degr
+        # pressure
+        disp_press = self.generator.skin_dict['Units'].get(
+                                               'display_pressure', self.press)
+        if disp_press in available_units:
+            self.disp_press = disp_press
+        # measure (rain)
+        disp_meas = self.generator.skin_dict['Units'].get(
+                                               'display_rain', self.meas)
+        if disp_meas in available_units:
+            self.disp_meas = disp_meas
+        # speed
+        disp_speed = self.generator.skin_dict['Units'].get(
+                                               'display_speed', self.speed)
+        if disp_speed in available_units:
+            self.disp_speed = disp_speed
+        # rain rate
+        disp_rainR = self.generator.skin_dict['Units'].get(
+                                               'display_rainrate', self.rainR)
+        if disp_rainR in available_units:
+            self.disp_rainR = disp_rainR
+
+        # We can at least make sure the format overrides are integers
+        try:
+            self.disp_p_f = int(self.generator.skin_dict['Units'].get(
+                                               'format_pressure', self.p_f))
+        except ValueError as e:
+            self.disp_p_f = self.p_f
+            logdbg("Invalid integer given for format_pressure : %s" % e)
+        try:
+            self.disp_m_f = int(self.generator.skin_dict['Units'].get(
+                                               'format_rain', self.m_f))
+        except ValueError as e:
+            self.disp_m_f = self.m_f
+            logdbg("Invalid integer given for format_rain : %s" % e)
+
+        try:
+            self.disp_rr_f = int(self.generator.skin_dict['Units'].get(
+                                               'format_rainrate', self.rr_f))
+        except ValueError as e:
+            self.disp_rr_f = self.rr_f
+            logdbg("Invalid integer given for format_rainrate : %s" % e)
 
         def js_bool(_i):
             # shamelessly ripped of from weeutils.to_bool and adjusted to
@@ -1299,8 +1372,8 @@ class Mesowx(SearchList):
         for _k, _i in chart_visible.items():
             if "outtemp_sw" in _k:
                 # one chart has to be enabled for highcharts to start
-                # properly. This is the annointed one, an completely arbitary
-                # choice except that it should always have data!
+                # properly. This is the annointed one, a completely arbitary
+                # choice except that it should always have data.
                 # self.out_bool = js_bool(_i)
                 self.out_bool = 'true'
             elif "intemp_sw" in _k:
@@ -1332,13 +1405,13 @@ class Mesowx(SearchList):
             elif "inhumidity_sw" in _k:
                 self.inh_bool = js_bool(_i)
 
-        # mesowx console sections
+        # mesowx console sections, additional areas on the mesowx console
         self.console_intemp = weeutil.weeutil.to_bool(self.generator.skin_dict[
                              'Extras'].get('console_intemp', 'false'))
         self.console_inhum = weeutil.weeutil.to_bool(self.generator.skin_dict[
                              'Extras'].get('console_inhumidity', 'false'))
 
-        # Davis weather station specific value
+        # Davis weather station specific value.
         self.davis_dayrain = weeutil.weeutil.to_bool(self.generator.skin_dict[
                              'Extras'].get('davis_dayrain', 'false'))
         # loginf("davis_dayrain is %s" % self.davis_dayrain)

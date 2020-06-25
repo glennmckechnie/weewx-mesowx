@@ -2,6 +2,9 @@
 
 ## 0.6.3 (2020-06-23) ##
 
+* split unit configuration into database (auto via weewx.conf) **and** display
+    (manual via skin.conf)
+* issues ref #2 : change displayed unit inHg for barometer to 'inHg' instead of 'in'
 * flag (stats - min/max) colors are now the same as the line colors. They should also be
     visible when near the boundaries (clip : false)
 * add optional inTemp and inHumidity sections to mesowx console. We have the room, if we
