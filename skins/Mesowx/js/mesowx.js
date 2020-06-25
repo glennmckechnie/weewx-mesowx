@@ -18,7 +18,7 @@ mesowx.Unit = (function() {
         f : new meso.UnitDef('f', '°F'), // fahrenheit
         c : new meso.UnitDef("c", '°C'), // celsius
 
-        inHg : new meso.UnitDef('inHg', 'in'), // inches of mercury
+        inHg : new meso.UnitDef('inHg', 'inHg'), // inches of mercury
         mb : new meso.UnitDef('mb', 'mb'), // millibar
         hPa : new meso.UnitDef('hPa', 'hPa'), // hectopascal
         kPa : new meso.UnitDef('kPa', 'kPa'), // kilopascal
