@@ -421,8 +421,7 @@ class SyncService(weewx.engine.StdService):
         # new_loop_packet() for more info
         self.lastLoopDateTime = 0
         # supply a user agent string to satisfy hosting servers
-        self.u_agent= ({'User-Agent':'MesoWX-sync/0.10 \
-                       (https://github.com/glennmckechnie/weewx-mesowx)'})
+        self.u_agent= ({'User-Agent':'MesoWX/0.6.3 (https://github.com/glennmckechnie/weewx-mesowx)'})
         # using a http connection pool to potentially save some overhead and
         # server burden if keep alive is enabled, maxsize is set to 2 since
         # there are two threads using the pool. Note that keep alive will need
