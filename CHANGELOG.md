@@ -1,5 +1,15 @@
 # MesoWx Change Log #
 
+## 0.6.4 (2020-06-27) ##
+
+* text labels are now configurable to accept alternate names or languages.
+    mesowx.py, index.html.tmpl, skin.conf and Config.js.tmpl have been tweaked to
+    1.) retain a set of english defaults
+    2.) read values from the [Language] sections in skin.conf
+    skins/mesowx/*.inc files will still need to be hand edited as they are intended
+    to be user configurable anyway
+
+
 ## 0.6.3 (2020-06-23) ##
 
 * split unit configuration into database (auto via weewx.conf) **and** display

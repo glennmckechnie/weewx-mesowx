@@ -2,6 +2,18 @@
 
 
 **25th June 2020**
+### Languages
+
+Released as [version 0.6.4](https://github.com/glennmckechnie/weewx-mesowx/releases/tag/v0.6.4)
+
+* text labels are now configurable to accept alternate names or languages.
+    mesowx.py, index.html.tmpl, skin.conf and Config.js.tmpl have been tweaked to
+    1.) retain a set of english defaults
+    2.) read values from the [Language] sections in skin.conf
+
+* No change to skins/mesowx/XXX.inc files, they will still need to be hand edited. They are
+    intended to be user configurable anyway.
+
 
 ### Better Bling!
 
