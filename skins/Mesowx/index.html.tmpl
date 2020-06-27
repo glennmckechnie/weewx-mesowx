@@ -96,10 +96,10 @@
                     use the davis_dayrain = 'true' option in skin.conf to enable it here, and elsewhere.
                     Caveat: untested by me, column must exist in database, mesowx.py schema needs adjusting.
                 -->
-                #if not $day_rain
+                #if not $davis_dayrain
                  <span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span>
                 #end if
-                #if $day_rain
+                #if $davis_dayrain
                  <span class="dayRain-value reading-value"></span> <span class="dayRain-unit unit-label"></span>
                  <div class="rainRate-container"><span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span></div>
                 #end if
