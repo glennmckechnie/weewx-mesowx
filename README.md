@@ -1,9 +1,5 @@
 
-**Jun 2020:  Weewx and wee_extension -- DONE!**
 
-The move to use *wee_extension* for the installation process is done. This, along with various updates and easier configuration gives a working default local installation and a far easier process to set up a remote installation (move a directory, rename one file). Testing and feedback is always welcome...
-
-More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It's not dead yet (it's just sleeping squire.)
 
 **25th June 2020**
 
@@ -41,7 +37,14 @@ See the CHANGELOG.md for a brief summary of changes.
 
 ----
 
+**Jun 2020:  Weewx and wee_extension -- DONE!**
+
+The move to use *wee_extension* for the installation process is done. This, along with various updates and easier configuration gives a working default local installation and a far easier process to set up a remote installation (move a directory, rename one file). Testing and feedback is always welcome...
+
+More could be done with this skin and with support and contributions from the community that could still happen. Fork away, contribute back, raise issues. It's not dead yet (it's just sleeping squire.)
 # [WeeWX-MesoWx](https://github.com/glennmckechnie/weewx-mesowx)
+
+----
 
 This repo is a fork of MesoWx as originally implemented at [Mesowx](https://bitbucket.org/lirpa/mesowx)
 
