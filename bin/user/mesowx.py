@@ -41,7 +41,7 @@ from weewx.engine import StdService
 from weewx.cheetahgenerator import SearchList
 import weeutil.weeutil
 
-VERSION = "0.6.3"
+VERSION = "0.6.4"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -1415,6 +1415,143 @@ class Mesowx(SearchList):
         self.davis_dayrain = weeutil.weeutil.to_bool(self.generator.skin_dict[
                              'Extras'].get('davis_dayrain', 'false'))
         # loginf("davis_dayrain is %s" % self.davis_dayrain)
+
+        # language keys for chart labels
+        # set up with english defaults
+        self.chart_atemp = 'Temperature'
+        self.chart_press = 'Barometer'
+        self.chart_awind = 'Wind'
+        self.chart_windd = 'Wind Dir'
+        self.chart_humid = 'Humidity'
+        self.chart_arain = 'Rain'
+        self.chart_rainr = 'Rain Rate'
+        # or overwrite with skin.conf values
+        try:
+            chart_labels = self.generator.skin_dict['Language'].get(
+                                                            'ChartLabels', {})
+            for _k, _i in chart_labels.items():
+                if "chart_atemp" in _k:
+                    self.chart_atemp = _i
+                elif "chart_press" in _k:
+                    self.chart_press = _i
+                elif "chart_awind" in _k:
+                    self.chart_awind = _i
+                elif "chart_windd" in _k:
+                    self.chart_windd = _i
+                elif "chart_humid" in _k:
+                    self.chart_humid = _i
+                elif "chart_arain" in _k:
+                    self.chart_arain = _i
+                elif "chart_rainr" in _k:
+                    self.chart_rainr = _i
+        except:
+            # not an error as we should be able to continue regardless
+            logdbg("No language section, using default chart labels")
+
+
+        # language keys for chart legend labels
+        # set up with english defaults
+        self.legend_outtemp = 'Out Temp'
+        self.legend_dewp = 'Dewpoint'
+        self.legend_arain = 'Rain'
+        self.legend_rainr = 'Rain Rate'
+        self.legend_raint = 'Rain Today'
+        self.legend_winds = 'Wind Speed'
+        self.legend_windd = 'Wind Direction'
+        self.legend_windgu = 'Wind Gust'
+        self.legend_windgd = 'Wind Gust Direction'
+        self.legend_ohumid = 'Out Humidity'
+        self.legend_pressb = 'Barometric Pressure'
+        self.legend_windc = 'Wind Chill'
+        self.legend_heati = 'Heat Index'
+        self.legend_intemp = 'In Temp'
+        self.legend_ihumid = 'In Humidity'
+        # or overwrite with skin.conf values
+        try:
+            legend_labels = self.generator.skin_dict['Language'].get(
+                                                            'LegendLabels', {})
+            for _k, _i in legend_labels.items():
+                if "legend_outtemp" in _k:
+                    self.legend_outtemp = _i
+                elif "legend_dewp" in _k:
+                    self.legend_dewp = _i
+                elif "legend_arain" in _k:
+                    self.legend_arain = _i
+                elif "legend_rainr" in _k:
+                    self.legend_rainr = _i
+                elif "legend_raint" in _k:
+                    self.legend_raint = _i
+                elif "legend_winds" in _k:
+                    self.legend_winds = _i
+                elif "legend_windd" in _k:
+                    self.legend_windd = _i
+                elif "legend_windgd" in _k:
+                    self.legend_windgd = _i
+                elif "legend_windgu" in _k:
+                    self.legend_windgu = _i
+                elif "legend_ohumid" in _k:
+                    self.legend_ohumid = _i
+                elif "legend_pressb" in _k:
+                    self.legend_pressb = _i
+                elif "legend_windc" in _k:
+                    self.legend_windc = _i
+                elif "legend_heati" in _k:
+                    self.legend_heati = _i
+                elif "legend_intemp" in _k:
+                    self.legend_intemp = _i
+                elif "legend_ihumid" in _k:
+                    self.legend_ihumid = _i
+        except:
+            # not an error as we should be able to continue regardless
+            logdbg("No language section, using default legend values")
+
+        # language keys for index.html labels
+        # set up with english defaults
+
+        self.index_feels = 'feels like'
+        self.index_otemp = 'outside temperature'
+        self.index_itemp = 'inside temperature'
+        self.index_dewp = 'dewpoint'
+        self.index_awind = 'wind'
+        self.index_ohumid = 'outside humidity'
+        self.index_ihumid = 'inside humidity'
+        self.index_press = 'pressure'
+        self.index_arain = 'rain'
+        self.index_realt = 'Real-time'
+        self.index_sphours = 'hours'
+        self.index_archive = 'Archive'
+        # or overwrite with skin.conf values
+        try:
+            index_labels = self.generator.skin_dict['Language'].get(
+                                                            'IndexLabels', {})
+            for _k, _i in index_labels.items():
+                if "index_feels" in _k:
+                    self.index_feels = _i
+                if "index_otemp" in _k:
+                    self.index_otemp = _i
+                if "index_itemp" in _k:
+                    self.index_itemp = _i
+                elif "index_dewp" in _k:
+                    self.index_dewp = _i
+                elif "index_awind" in _k:
+                    self.index_awind = _i
+                elif "index_ohumid" in _k:
+                    self.index_ohumid = _i
+                elif "index_ihumid" in _k:
+                    self.index_ihumid = _i
+                elif "index_press" in _k:
+                    self.index_press = _i
+                elif "index_arain" in _k:
+                    self.index_arain = _i
+                elif "index_realt" in _k:
+                    self.index_realt = _i
+                elif "index_sphours" in _k:
+                    self.index_sphours = _i
+                elif "index_archive" in _k:
+                    self.index_archive = _i
+        except:
+            # not an error as we should be able to continue regardless
+            logdbg("No language section, using default index.html values")
 
         # the wee_extension install process will create 2 unique keys and add
         # them to weewx.conf. Change them if you like but the psuedo warranty

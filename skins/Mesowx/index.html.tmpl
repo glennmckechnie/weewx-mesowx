@@ -58,34 +58,34 @@
         <div id="mesowx-console" class="wx-console console-vertical">
             <div class="outTemp-group reading-group">
                 <div><span class="outTemp-value reading-value"></span> <span class="outTemp-unit unit-label"></span></div>
-                <div class="feels-like-container"><span class="feels-like-value">feels like<br></span><span class="heatindex-value feels-like-value reading-value"></span><span class="windchill-value feels-like-value reading-value"></span> <span class="windchill-unit unit-label"></span></div>
-                <span class="desc">outside temperature</span>
+                <div class="feels-like-container"><span class="feels-like-value">$index_feels<br></span><span class="heatindex-value feels-like-value reading-value"></span><span class="windchill-value feels-like-value reading-value"></span> <span class="windchill-unit unit-label"></span></div>
+                <span class="desc">$index_otemp</span>
                 #if $console_intemp
                 <span class="inTemp-value reading-value"></span><span class="inTemp-unit unit-label"></span>
-                <span class="desc">inside temperature</span>
+                <span class="desc">$index_itemp</span>
                 #end if
             </div>
             <div class="dewpoint-group reading-group">
                 <span class="dewpoint-value reading-value"></span> <span class="dewpoint-unit unit-label"></span>
-                <span class="desc">dewpoint</span>
+                <span class="desc">$index_dewp</span>
             </div>
             <div class="wind-group reading-group">
                 <!-- span class="windSpeed-value reading-value"></span> <span class="windSpeed-unit unit-label"></span>
                 <span class="windDir-value reading-value"></span -->
                 <div id="compass" class="compass"></div>
-                <span class="desc">wind</span>
+                <span class="desc">$index_awind</span>
             </div>
             <div class="out-hum-group reading-group">
                 <span class="outHumidity-value reading-value"></span> <span class="outHumidity-unit unit-label"></span>
-                <span class="desc">outside humidity</span>
+                <span class="desc">$index_ohumid</span>
                 #if $console_inhum
                     <span class="inHumidity-value reading-value"></span><span class="inHumidity-unit unit-label"></span>
-                    <span class="desc">inside humidity</span>
+                    <span class="desc">$index_ihumid</span>
                 #end if
             </div>
             <div class="bar-group reading-group">
                 <span class="barometer-value reading-value"></span> <span class="barometer-unit unit-label"></span>
-                <span class="desc">pressure</span>
+                <span class="desc">$index_press</span>
             </div>
             <div class="rain-group reading-group">
                 <!--
@@ -103,15 +103,15 @@
                  <span class="dayRain-value reading-value"></span> <span class="dayRain-unit unit-label"></span>
                  <div class="rainRate-container"><span class="rainRate-value reading-value"></span> <span class="rainRate-unit unit-label"></span></div>
                 #end if
-                <span class="desc">rain</span>
+                <span class="desc">$index_arain</span>
             </div>
             <div class="last-update"> <span class="dateTime-value"></span></div>
         </div>
         <div id="charts-container"></div>
         <div id="chart-selector">
-            <a id="real-time-selector" href="#">Real-time</a>
-            <a id="today-selector" href="#">$data_limit-hours</a>
-            <a id="archive-selector" href="#">Archive</a>
+            <a id="real-time-selector" href="#">$index_realt</a>
+            <a id="today-selector" href="#">$data_limit-$index_sphours</a>
+            <a id="archive-selector" href="#">$index_archive</a>
         </div>
         <div id="link-selector">
             #include "links.inc"
