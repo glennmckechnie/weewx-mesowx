@@ -1281,7 +1281,7 @@ class Mesowx(SearchList):
         elif 'METRICWX' in wee_units:
             self.degr = self.disp_degr = 'c'
             self.press = self.disp_press = 'hPa'
-            self.p_f = self.disp_p_f = '3'
+            self.p_f = self.disp_p_f = '1'
             self.meas = self.disp_meas = 'mm'
             self.m_f = self.disp_m_f = '1'
             self.speed = self.disp_speed = 'mps'
