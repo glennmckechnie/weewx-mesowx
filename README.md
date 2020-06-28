@@ -245,7 +245,7 @@ On the otherhand, If you are using a hosting provider that provides their own ge
 You can hand edit them into the config.json file you renamed above and upload that, or replace the preset values in weewx.conf and regenerate the webserver mesowx files and directories, and upload the whole shebang again. 
 Directly editing the config.json is the simplest, although adding them to weewx.conf gives you a backup method of regenerating the site and can save confusion later.
 
-On the subject of hosting providers. You get what you pay for and the 'free' hosting providers won't allow a service such as mesowx to run (on their free accounts). See issue #6 at the github site for the full details but basically they intercept the call to data.php and inject there own code (a cookie generator) which mesowx doesn't expect, and can't deal with (as the providers intended).
+On the subject of hosting providers. You get what you pay for and the 'free' hosting providers won't allow a service such as mesowx to run (on their free accounts). See [issue #6](https://github.com/glennmckechnie/weewx-mesowx/issues/6) at the github site for the full details but basically they intercept the call to data.php and inject there own code (a cookie generator) which mesowx doesn't expect, and can't deal with (as the providers intended).
 
 
 ## Enhance or Break??
