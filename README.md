@@ -242,11 +242,11 @@ The "host", "user", "password", and "database" configuration values preset in me
 In this first case, where it could be a home network, or a server in your DMZ; the only setting that is system specific is "host". That needs to match what your mysql installation expects and that's most likely to be "localhost". The "user", "password", and "database" values are entirely up to you. Change them if you want to, or leave them as they are.
 
 On the otherhand, If you are using a hosting provider that provides their own generated values, ones that are specific to your account, then you obviously need to use those values.
-You can hand edit them into the config.json file you renamed above and upload that, or replace the preset values in weewx.conf and regenerate the webserver mesowx files and directories, and upload the whole shebang again. 
-Directly editing the config.json is the simplest, although adding them to weewx.conf gives you a backup method of regenerating the site and can save confusion later.
+Edit the config.json file you renamed above and upload that, overwriting the previous version.
 
-On the subject of hosting providers. You get what you pay for and the 'free' hosting providers won't allow a service such as mesowx to run (on their free accounts). See [issue #6](https://github.com/glennmckechnie/weewx-mesowx/issues/6) at the github site for the full details but basically they intercept the call to data.php and inject there own code (a cookie generator) which mesowx doesn't expect, and can't deal with (as the providers intended).
+On the subject of hosting providers. You get what you pay for and at least one of the 'free' hosting providers won't allow a service such as mesowx to run (on their free accounts). See [issue #6](https://github.com/glennmckechnie/weewx-mesowx/issues/6) at the github site for the full details but basically they intercept the call to data.php and inject there own code (a cookie generator) which mesowx doesn't expect, and can't deal with (as the providers intended).
 
+Also, keep in mind the traffic usage with the Free providers. You're uploading your archive records every archive interval, and your LOOP packets as often as they are generated. This has the potential to add up very quickly and if you are rate limited then you may hit the wall and the only sign will be a gap/s in data.
 
 ## Enhance or Break??
 
