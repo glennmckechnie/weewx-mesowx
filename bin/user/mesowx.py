@@ -32,6 +32,7 @@ import itertools
 import time
 import threading
 import urllib3
+import requests
 
 import weewx
 import weewx.restx
@@ -41,7 +42,7 @@ from weewx.engine import StdService
 from weewx.cheetahgenerator import SearchList
 import weeutil.weeutil
 
-VERSION = "0.6.4"
+VERSION = "0.6.5"
 
 try:
     # Test for new-style weewx logging by trying to import weeutil.logger
@@ -88,7 +89,7 @@ schema = [
     ('barometer', 'REAL'),
     ('pressure', 'REAL'),
     ('altimeter', 'REAL'),
-    #('appTemp', 'REAL'),
+    ('appTemp', 'REAL'),
     ('inTemp', 'REAL'),
     ('outTemp', 'REAL'),
     ('inHumidity', 'REAL'),
@@ -422,6 +423,7 @@ class SyncService(weewx.engine.StdService):
         self.lastLoopDateTime = 0
         # supply a user agent string to satisfy hosting servers
         self.u_agent= ({'User-Agent':'MesoWX/0.6.3 (https://github.com/glennmckechnie/weewx-mesowx)'})
+        #self.u_agent= ({'User-Agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0'})
         # using a http connection pool to potentially save some overhead and
         # server burden if keep alive is enabled, maxsize is set to 2 since
         # there are two threads using the pool. Note that keep alive will need
@@ -548,6 +550,7 @@ class SyncService(weewx.engine.StdService):
     def back_fill(self):
         global last_datetime_synced
         last_datetime_synced = self.fetch_latest_remote_datetime()
+        # last_datetime_synced = "1593342453" # debug left in ??
         if last_datetime_synced is None:
             num_to_sync = self.dbm.getSql("select count(*) from %s" %
                                           self.dbm.table_name)[0]
@@ -604,12 +607,14 @@ class SyncService(weewx.engine.StdService):
     def fetch_latest_remote_datetime(self):
         logdbg("remote: requesting latest dateTime from %s" %
                self.latest_url)
+        # used to halt the backfill on an invalid json response
+        current_time  = int(time.time())
         # the entity id to sync to on the remote server
         # redundant # self.entity_id = self.sync_config['archive_entity_id']
         # the security key that will be sent along with updates to the entity
         # red'nt # self.security_key = self.sync_config['archive_security_key']
-        # http://wxdev.ruskers.com/data.php?entity_id
-        # =weewx_archive&data=dateTime&order=desc&limit=1
+        # http://wxdev.ruskers.com/
+        # data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
         postdata = {'entity_id': self.entity_id, 'data': 'dateTime',
                     'order': 'desc', 'limit': 1}
         http_response = self.make_http_request(self.latest_url, postdata)
@@ -618,12 +623,17 @@ class SyncService(weewx.engine.StdService):
         except Exception as e:
             # NoneType object has no attribute data - server not responding
             logerr("remote: Exception as %s" % e)
-            current_time  = int(time.time())
             logerr("remote: FIXME: no datetime available. Returning current"
                    " time %s to halt any backfill operation. FIXME"
                    " ( is the server running? )" % current_time)
             return current_time
-        response = json.loads(response_json)
+        try:
+            response = json.loads(response_json)
+        except Exception as e:
+                logdbg("634: http response.data % and error %s" % (response_json, e))
+                return current_time
+                # datetime = None
+                # return
         if len(response) == 0:
             datetime = None
         else:
@@ -637,9 +647,17 @@ class SyncService(weewx.engine.StdService):
         self.make_http_request(self.update_url, postdata)
 
     def make_http_request(self, url, postdata):
+        try:
+            response = requests.get(url)
+            logdbg("response %s cookies %s response %s" % (response, response.cookies, response.status_code))
+        except requests.exceptions.ConnectionError:
+            logerr("connection error occurred: is \"%s\" correct?" % url)
+            self.http_max_tries = 0
         for count in range(self.http_max_tries):
             try:
                 response = self.http_pool.request('POST', url, postdata)
+                # response = self.http_pool.request_encode_body('POST', url, postdata)
+                logdbg("660: SYNC: http response.data %s" % response.data)
                 if response.status == 200:
                     return response
                 else:
@@ -743,9 +761,16 @@ class SyncThread(threading.Thread):
         self.make_http_request(self.update_url, postdata)
 
     def make_http_request(self, url, postdata):
+        try:
+            response = requests.get(url)
+            logdbg("response %s cookies %s response %s" % (response, response.cookies, response.status_code))
+        except requests.exceptions.ConnectionError:
+            logerr("updatedata - connection error occurred: is \"%s\" correct?" % url)
+            self.http_max_tries = 0
         for count in range(self.http_max_tries):
             try:
                 response = self.http_pool.request('POST', url, postdata)
+                logdbg("774: SYNC: http response.data %s" % response.data)
                 if response.status == 200:
                     return response
                 else:
