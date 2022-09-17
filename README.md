@@ -1,5 +1,12 @@
 
+**17th Sept 2022**
 
+* Code tidy up. 
+
+* Add try for missing server "ConnectionError" fallout. No longer fatal, it should keep running now.
+Pending release - updated code is in repo master.
+
+* The original code at https://bitbucket.org/lirpa/mesowx has gone. So this is it!
 
 **25th June 2020**
 ### Languages
