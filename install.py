@@ -24,10 +24,10 @@ class MesowxInstaller(ExtensionInstaller):
         raw_key = random_password()
 
         super(MesowxInstaller, self).__init__(
-            version='0.6.4',
+            version='0.6.5',
             name='mesowx',
             description='Weather station console web front-end with'
-                        'real-time updating and dynamic charting.',
+                        ' real-time updating and dynamic charting.',
             author='Peter Finlay, modified for weewx installation'
                    'by Glenn McKechnie',
             author_email="<glenn.mckechnie@gmail.com>",
