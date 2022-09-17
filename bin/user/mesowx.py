@@ -5,6 +5,8 @@
 #
 # This script combines the original 3 scripts from lirpa MesoWX,
 # mesowx/raw.py and mesowx/sync.py and mesowx/retain.py .
+# As of 09/2022 the lirpa MesoWX repository has gone.
+#
 # They have also been modified to run under either python2.7 or python3.X, for
 # use with weewx4.X
 #
@@ -76,7 +78,7 @@ except ImportError:
     def logerr(msg):
         logmsg(syslog.LOG_ERR, msg)
 
-# sync.py start
+# original sync.py script -- start
 
 if weewx.__version__ < "4":
     raise weewx.UnsupportedFeature("weewx 4 is required, found %s" %
@@ -423,7 +425,7 @@ class SyncService(weewx.engine.StdService):
         self.lastLoopDateTime = 0
         # supply a user agent string to satisfy hosting servers
         self.u_agent= ({'User-Agent':'MesoWX/0.6.3 (https://github.com/glennmckechnie/weewx-mesowx)'})
-        #self.u_agent= ({'User-Agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0'})
+        # self.u_agent= ({'User-Agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0'})
         # using a http connection pool to potentially save some overhead and
         # server burden if keep alive is enabled, maxsize is set to 2 since
         # there are two threads using the pool. Note that keep alive will need
@@ -504,8 +506,8 @@ class SyncService(weewx.engine.StdService):
                    weeutil.weeutil.timestamp_to_string(
                     event.record['dateTime']))
         else:
-            logerr("remote: not syncing archive record (%d) due to previous error." %
-                   event.record['dateTime'])
+            logerr("remote: not syncing archive record (%d) "
+                   "due to previous error." % event.record['dateTime'])
 
     def new_loop_packet(self, event):
         if self.raw_thread.isAlive():
@@ -550,15 +552,17 @@ class SyncService(weewx.engine.StdService):
     def back_fill(self):
         global last_datetime_synced
         last_datetime_synced = self.fetch_latest_remote_datetime()
-        # last_datetime_synced = "1593342453" # debug left in ??
+        # last_datetime_synced = int("1593342453") # Hmmm, debug left in ??
         if last_datetime_synced is None:
             num_to_sync = self.dbm.getSql("select count(*) from %s" %
                                           self.dbm.table_name)[0]
         else:
-            num_to_sync = self.dbm.getSql("select count(*) from %s where dateTime > ?" %
+            num_to_sync = self.dbm.getSql("select count(*) from %s "
+                                          "where dateTime > ?" %
                                           self.dbm.table_name,
                                           (last_datetime_synced,))[0]
-        logdbg("remote: %d records to sync since last record with dateTime: %s" %
+        logdbg("remote: %d records to sync since last record "
+               "with dateTime: %s" %
                (num_to_sync, weeutil.weeutil.timestamp_to_string(
                 last_datetime_synced)))
         if num_to_sync > 0:
@@ -580,7 +584,8 @@ class SyncService(weewx.engine.StdService):
             query = self.dbm.genSql("select * from %s order by dateTime asc" %
                                     self.dbm.table_name)
         else:
-            query = self.dbm.genSql("select * from %s where dateTime > ? order by dateTime asc" %
+            query = self.dbm.genSql("select * from %s where "
+                                    "dateTime > ? order by dateTime asc" %
                                     self.dbm.table_name, (datetime,))
         total_sent = 0
         while True:
@@ -593,13 +598,14 @@ class SyncService(weewx.engine.StdService):
                 total_sent += len(batch)
                 last_datetime_synced = batch[len(batch)-1]['dateTime']
                 # XXX add start/end datetime to log message
-                logdbg("remote: back_filled %d records; timestamp last record: %s" %
+                logdbg("remote: back_filled %d records; "
+                       "timestamp last record: %s" %
                        (total_sent, weeutil.weeutil.timestamp_to_string(
                         last_datetime_synced)))
             else:
                 # no more to send
                 break
-            # breath a bit so as not to don't bombard the remote server also
+            # breath a bit so as not to bombard the remote server. Also
             # back_filling could take some time, so make sure an exit event
             # hasn't been signaled
             self._wait(self.batch_send_interval)
@@ -607,8 +613,9 @@ class SyncService(weewx.engine.StdService):
     def fetch_latest_remote_datetime(self):
         logdbg("remote: requesting latest dateTime from %s" %
                self.latest_url)
-        # used to halt the backfill on an invalid json response
-        current_time  = int(time.time())
+        # A valid timestamp to be used to halt the backfill on an invalid
+        # json response (which means no datetime was returned)
+        current_time = int(time.time())
         # the entity id to sync to on the remote server
         # redundant # self.entity_id = self.sync_config['archive_entity_id']
         # the security key that will be sent along with updates to the entity
@@ -630,10 +637,11 @@ class SyncService(weewx.engine.StdService):
         try:
             response = json.loads(response_json)
         except Exception as e:
-                logdbg("634: http response.data % and error %s" % (response_json, e))
-                return current_time
-                # datetime = None
-                # return
+            logerr("Backfill no datetime: http response.data % and "
+                   "error %s" % (response_json, e))
+            return current_time
+            # datetime = None
+            # return
         if len(response) == 0:
             datetime = None
         else:
@@ -649,15 +657,23 @@ class SyncService(weewx.engine.StdService):
     def make_http_request(self, url, postdata):
         try:
             response = requests.get(url)
-            logdbg("response %s cookies %s response %s" % (response, response.cookies, response.status_code))
+            # data.php : 500 is okay as a response, as is 400. It tells us the
+            # server is at least up and listening. That's all this try:
+            # section is for.
+            logdbg("response %s cookies %s response %s" %
+                   (response,
+                    response.cookies,
+                    response.status_code))
         except requests.exceptions.ConnectionError:
-            logerr("connection error occurred: is \"%s\" correct?" % url)
+            logerr("Backfill archive data.php: fatal connection error: "
+                   "is \"%s\" correct?" % url)
+            # then skip any meaningful / data attempts.
             self.http_max_tries = 0
         for count in range(self.http_max_tries):
             try:
                 response = self.http_pool.request('POST', url, postdata)
-                # response = self.http_pool.request_encode_body('POST', url, postdata)
-                logdbg("660: SYNC: http response.data %s" % response.data)
+                logdbg("Backfill: archive http response.data %s" %
+                       response.data)
                 if response.status == 200:
                     return response
                 else:
@@ -675,8 +691,9 @@ class SyncService(weewx.engine.StdService):
                         else:
                             retry = True
                     else:
-                        message = "remote: Request to %s failed, server returned %s status with reason '%s'." % \
-                                  (url, response.status, response.reason)
+                        message = ("remote: Request to %s failed, server "
+                                   "returned %s status with reason '%s'." %
+                                   (url, response.status, response.reason))
                         # invalid credentials
                         if response.status == 403:
                             message += " Do your entity security keys match?"
@@ -700,7 +717,7 @@ class SyncService(weewx.engine.StdService):
                        self.http_retry_interval,))
                 self._wait(self.http_retry_interval)
         else:
-            loginf("remote: Failed to invoke %s after %d tries" % (
+            logerr("remote: Failed to invoke %s after %d tries" % (
                    url, self.http_max_tries))
 
     def _wait(self, duration):
@@ -711,7 +728,10 @@ class SyncService(weewx.engine.StdService):
 
 
 class SyncThread(threading.Thread):
-
+    """
+    It's a Threading thread so some duplicated code appears to be present - but
+    a threading thread *is* a duplicate so it remains...such is life.
+    """
     def __init__(self, queue, exit_event, http_pool,
                  thread_name="SyncThread", **sync_params):
         threading.Thread.__init__(self, name=thread_name)
@@ -763,14 +783,23 @@ class SyncThread(threading.Thread):
     def make_http_request(self, url, postdata):
         try:
             response = requests.get(url)
-            logdbg("response %s cookies %s response %s" % (response, response.cookies, response.status_code))
+            # 400 response is Okay as this request only checks if there is a
+            # working connection and it is responding. Check the database if
+            # you are unsure about the data (Real-time should be updating on
+            # the mesowx chart.
+            logdbg("response %s cookies %s response %s" %
+                   (response,
+                    response.cookies,
+                    response.status_code))
         except requests.exceptions.ConnectionError:
-            logerr("updatedata - connection error occurred: is \"%s\" correct?" % url)
+            logerr("LOOP updatedata.php: fatal connection error: "
+                   "is \"%s\" correct?" % url)
+            # then skip any meaningful / data attempts.
             self.http_max_tries = 0
         for count in range(self.http_max_tries):
             try:
                 response = self.http_pool.request('POST', url, postdata)
-                logdbg("774: SYNC: http response.data %s" % response.data)
+                logdbg("LOOP: http response.data %s" % response.data)
                 if response.status == 200:
                     return response
                 else:
@@ -788,8 +817,9 @@ class SyncThread(threading.Thread):
                         else:
                             retry = True
                     else:
-                        message = "sync: Request to %s failed, server returned %s status with reason '%s'." % \
-                                  (url, response.status, response.reason)
+                        message = ("sync: Request to %s failed, server "
+                                   "returned %s status with reason '%s'." %
+                                   (url, response.status, response.reason))
                         # invalid credentials
                         if response.status == 403:
                             message += " Do your entity security keys match?"
@@ -862,7 +892,8 @@ class RawSyncThread(SyncThread):
                            (weeutil.weeutil.timestamp_to_string(
                             raw_record['dateTime'])))
                 if self.debug_count == self.max_times_to_print:
-                    logdbg("remote raw: print message above only the first %s times" %
+                    logdbg("remote raw: print message above only the "
+                           "first %s times" %
                            self.max_times_to_print)
                 self.post_records(raw_record)
             except SyncError as e:
@@ -916,7 +947,8 @@ class ArchiveSyncThread(SyncThread):
             try:
                 self.sync_queued_records()
             except SyncError as e:
-                logerr("remote archive: synchronization failed, starting over in %s seconds" %
+                logerr("remote archive: synchronization failed, starting "
+                       "over in %s seconds" %
                        self.failure_retry_interval)
                 logerr("   ****  Reason: %s" % (e,))
                 self._wait(self.failure_retry_interval)
@@ -952,7 +984,7 @@ class ArchiveSyncThread(SyncThread):
                 self.queue.task_done()
 
 ###############################
-# start raw.0.4.1-lh.py
+# start of original raw.0.4.1-lh.py script
 ################################
 # VERSION = "0.4.1-lh"
 #
@@ -1119,7 +1151,7 @@ class RawService(StdService):
 #   }
 
 
-# retain.py
+# start of original retain.py script
 
 class RetainLoopValues(StdService):
     """Service retains previous loop packet values updating any value that
@@ -1159,7 +1191,10 @@ class RetainLoopValues(StdService):
 
 class Mesowx(SearchList):
     """
-    Generate some values for cheetah completion
+    Weewx essential
+    This generates values for cheetah to work its magic and allows the original
+    mesowx scripts to be incorporated (seamlessly) into weewx via wee_extension
+    weewx.conf and the install.py file.
     """
     def __init__(self, generator):
         SearchList.__init__(self, generator)
@@ -1309,7 +1344,8 @@ class Mesowx(SearchList):
             self.p_f = self.disp_p_f = '1'
             self.meas = self.disp_meas = 'mm'
             self.m_f = self.disp_m_f = '1'
-            self.speed = self.disp_speed = 'mps'
+            # self.speed = self.disp_speed = 'mps' # owfs returns mps if under METRICWX
+            self.speed = self.disp_speed = 'kph'
             self.rainR = self.disp_rainR = 'mmHr'
             self.rr_f = self.disp_rr_f = '1'
         else:  # it must be METRIC !
@@ -1472,7 +1508,6 @@ class Mesowx(SearchList):
         except:
             # not an error as we should be able to continue regardless
             logdbg("No language section, using default chart labels")
-
 
         # language keys for chart legend labels
         # set up with english defaults
