@@ -9,6 +9,13 @@ import itertools
 import weeutil.weeutil
 import weewx.engine
 
+# version sync_lh9.py : v0.4.2  pre sept 2022
+# version sync_lhgm10.py : v0.6.5  18/09/2022
+#  add urllib3.exceptions.NewConnectionError test, lint code & fix invalid
+#  syntax issues,
+
+version = "sync_lhgm10.py 18/09/22"
+
 
 class SyncError(Exception):
     """Raised when a non-fatal synchronization error occurs. May succeed if retried."""
@@ -50,7 +57,7 @@ class AbortAndExit(Exception):
 #     1) can't communicate w/server (IO)
 #     2) configuration/logical error (400 status response)
 #     3) unknown/unexpected error (500 status)
-#   all errors are possible when initially setting it up, but only #1 and possibly #3 should occur 
+#   all errors are possible when initially setting it up, but only #1 and possibly #3 should occur
 #     after that, thus always fail for #2, and retry for #1 and #3
 #
 # TODO rename to meso sync as this is not general purpose
@@ -68,7 +75,7 @@ class SyncService(weewx.engine.StdService):
         self.exit_event = threading.Event()
         self.archive_queue = Queue.Queue()
         self.raw_queue = Queue.Queue()
-        # keeps track of the dateTime of the last loop packet seen in order to prevent sending 
+        # keeps track of the dateTime of the last loop packet seen in order to prevent sending
         # packets with the same dateTime value, see new_loop_packet() for more info
         self.lastLoopDateTime = 0
         # supply a user agent string to satisfy hosting servers
@@ -111,7 +118,8 @@ class SyncService(weewx.engine.StdService):
         self.dbm = self.engine.db_binder.get_manager()
 
         # if a archive_entity_id is configured, then back-fill missed records and bind & create the thead to sync archive records
-        if self.entity_id <> "":
+        #if self.entity_id <> "":  # fails python3 syntax checker 1
+        if self.entity_id:
             # back_fill missed records on webserver
             self.back_fill()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
@@ -146,7 +154,7 @@ class SyncService(weewx.engine.StdService):
             # It's possible for records with duplicate dateTimes - this occurs when an archive packet
             # is processed since the LOOP packets are queued up and then returned immediately when
             # looping resumes, coupled with the fact that for Vantage Pro consoles the dateTime value is
-            # added by weewx. So, for database storage, skip the duplicates until we get a new one to 
+            # added by weewx. So, for database storage, skip the duplicates until we get a new one to
             # avoid a duplicate key error
             date_time = packet['dateTime']
             if date_time != self.lastLoopDateTime:
@@ -189,8 +197,8 @@ class SyncService(weewx.engine.StdService):
         if num_to_sync > 0:
                 if self.backfill_limit is not None and self.backfill_limit != 0 \
                         and num_to_sync[0] > self.backfill_limit:
-                    raise FatalSyncError, "sync archive: Too many to sync: %d exeeds the limit of %d" % \
-                                          (num_to_sync, self.backfill_limit)
+                    raise FatalSyncError ("sync archive: Too many to sync: %d exeeds the limit of %d" % \
+                                          (num_to_sync, self.backfill_limit))
                 syslog.syslog(syslog.LOG_DEBUG, "sync archive: back_filling %d records" % num_to_sync)
                 self.sync_all_since_datetime(last_datetime_synced)
                 syslog.syslog(syslog.LOG_DEBUG, "sync archive: done back_filling %d records" % num_to_sync)
@@ -252,8 +260,10 @@ class SyncService(weewx.engine.StdService):
                     return response
                 else:
                     # from here must either set retry=True or raise a FatalSyncError
-                    syslog.syslog(syslog.LOG_ERR, "sync archive: http request failed (%s %s): %s" %
-                                  (response.status, response.reason, response.data))
+                    #syslog.syslog(syslog.LOG_ERR, "sync archive: http request failed (%s %s): %s" %
+                    #              (response.status, response.reason, response.data))
+                    syslog.syslog(syslog.LOG_ERR, "sync archive: http request failed  %s" %
+                                  response.status)
                     if response.status >= 500:
                         # Don't retry if Duplicate entry error
                         if response.data.find('Duplicate entry') >= 0:
@@ -273,17 +283,21 @@ class SyncService(weewx.engine.StdService):
                         # bad request (likely an invalid setup)
                         if response.status == 400:
                             message += " Check your entity configuration."
-                        raise FatalSyncError, message
-            except (socket.error, urllib3.exceptions.MaxRetryError), e:
+                        raise FatalSyncError (message)
+            except (urllib3.exceptions.NewConnectionError) as e:
+                syslog.syslog(syslog.LOG_ERR, "sync: failed to connect to %s" % url)
+                syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))
+                retry = False
+            except (socket.error, urllib3.exceptions.MaxRetryError) as e:
                 syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
-                syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
+                syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))
                 retry = True
             if retry and count+1 < self.http_max_tries:
                 # wait a bit before retrying, ensuring that we exit if signaled
                 syslog.syslog(syslog.LOG_DEBUG, "sync: retrying again in %s seconds" % (self.http_retry_interval,))
                 self._wait(self.http_retry_interval)
         else:
-            raise SyncError, "sync archive: Failed to invoke %s after %d tries" % (url, self.http_max_tries)
+            raise SyncError ("sync archive: Failed to invoke %s after %d tries" % (url, self.http_max_tries))
 
     def _wait(self, duration):
         if duration is not None:
@@ -320,11 +334,11 @@ class SyncThread(threading.Thread):
         except AbortAndExit:
             syslog.syslog(syslog.LOG_DEBUG, "sync: thread shutting down")
             return
-        except FatalSyncError, e:
+        except FatalSyncError as e:
             syslog.syslog(syslog.LOG_ERR, "sync: fatal syncronization error")
             syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
             return
-        except Exception, e:
+        except Exception as e:
             syslog.syslog(syslog.LOG_ERR, "sync: unexpected error: %s" % (e,))
             weeutil.weeutil.log_traceback("   ****  ")
             syslog.syslog(syslog.LOG_ERR, "   ****  Thread terminating.")
@@ -346,8 +360,10 @@ class SyncThread(threading.Thread):
                     return response
                 else:
                     # from here must either set retry=True or raise a FatalSyncError
-                    syslog.syslog(syslog.LOG_ERR, "sync: http request failed (%s %s): %s" %
-                                  (response.status, response.reason, response.data))
+                    # syslog.syslog(syslog.LOG_ERR, "sync: http request failed (%s %s): %s" %
+                    #              (response.status, response.reason, response.data))
+                    syslog.syslog(syslog.LOG_ERR, "sync: http request failed %s" %
+                                  response.status)
                     if response.status >= 500:
                         # Don't retry if Duplicate entry error
                         if response.data.find('Duplicate entry') >= 0:
@@ -367,17 +383,21 @@ class SyncThread(threading.Thread):
                         # bad request (likely an invalid setup)
                         if response.status == 400:
                             message += " Check your entity configuration."
-                        raise FatalSyncError, message
-            except (socket.error, urllib3.exceptions.MaxRetryError), e:
+                        raise FatalSyncError (message)
+            except (urllib3.exceptions.NewConnectionError) as e:
+                syslog.syslog(syslog.LOG_ERR, "sync: failed to connect to %s" % url)
+                syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))
+                retry = False
+            except (socket.error, urllib3.exceptions.MaxRetryError) as e:
                 syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
-                syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
+                syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))
                 retry = True
             if retry and count+1 < self.http_max_tries:
                 # wait a bit before retrying, ensuring that we exit if signaled
                 syslog.syslog(syslog.LOG_DEBUG, "sync: retrying again in %s seconds" % (self.http_retry_interval,))
                 self._wait(self.http_retry_interval)
         else:
-            raise SyncError, "sync: Failed to invoke %s after %d tries" % (url, self.http_max_tries)
+            raise SyncError ("sync: Failed to invoke %s after %d tries" % (url, self.http_max_tries))
 
     def _wait(self, duration):
         if duration is not None:
@@ -423,7 +443,7 @@ class RawSyncThread(SyncThread):
                     syslog.syslog(syslog.LOG_DEBUG, "sync raw: print message above only the first %s times" %
                                   self.max_times_to_print)
                 self.post_records(raw_record)
-            except SyncError, e:
+            except SyncError as e:
                 syslog.syslog(syslog.LOG_ERR, "sync raw: unable to sync record, skipping")
                 syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
             finally:
@@ -462,7 +482,7 @@ class ArchiveSyncThread(SyncThread):
         while True:
             try:
                 self.sync_queued_records()
-            except SyncError, e:
+            except SyncError as e:
                 syslog.syslog(syslog.LOG_ERR, "sync archive: synchronization failed, starting over in %s seconds" %
                               self.failure_retry_interval)
                 syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
