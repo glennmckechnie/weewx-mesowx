@@ -622,7 +622,7 @@ class SyncService(weewx.engine.StdService):
         # data.php?entity_id=weewx_archive&data=dateTime&order=desc&limit=1
         postdata = {'entity_id': self.entity_id, 'data': 'dateTime',
                     'order': 'desc', 'limit': 1}
-        http_response = self.make_http_request(self.latest_url, postdata)
+        http_response = self.backfill_http_request(self.latest_url, postdata)
         try:
             response_json = http_response.data.decode('utf-8')
         except Exception as e:
