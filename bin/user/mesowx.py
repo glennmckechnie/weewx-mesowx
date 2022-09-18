@@ -29,12 +29,12 @@ try:
 except ImportError:
     import Queue as queue
 import json
-import socket
+# import socket
 import itertools
 import time
 import threading
 import urllib3
-import requests
+# import requests
 
 import weewx
 import weewx.restx
@@ -629,15 +629,15 @@ class SyncService(weewx.engine.StdService):
             response_json = http_response.data.decode('utf-8')
         except Exception as e:
             # NoneType object has no attribute data - server not responding
-            logerr("remote: Exception as %s" % e)
-            logerr("remote: FIXME: no datetime available. Returning current"
-                   " time %s to halt any backfill operation. FIXME"
+            logdbg("remote: Exception as %s" % e)
+            logerr("remote: no datetime available. Returning current"
+                   " time %s to halt any backfill operation."
                    " ( is the server running? )" % current_time)
             return current_time
         try:
             response = json.loads(response_json)
         except Exception as e:
-            logerr("Backfill no datetime: http response.data % and "
+            logerr("remote: no datetime available: http response.data % and "
                    "error %s" % (response_json, e))
             return current_time
             # datetime = None
@@ -655,31 +655,18 @@ class SyncService(weewx.engine.StdService):
         self.make_http_request(self.update_url, postdata)
 
     def make_http_request(self, url, postdata):
-        try:
-            response = requests.get(url)
-            # data.php : 500 is okay as a response, as is 400. It tells us the
-            # server is at least up and listening. That's all this try:
-            # section is for.
-            logdbg("response %s cookies %s response %s" %
-                   (response,
-                    response.cookies,
-                    response.status_code))
-        except requests.exceptions.ConnectionError:
-            logerr("Backfill archive data.php: fatal connection error: "
-                   "is \"%s\" correct?" % url)
-            # then skip any meaningful / data attempts.
-            self.http_max_tries = 0
+        # data.php (backfilling)
         for count in range(self.http_max_tries):
             try:
                 response = self.http_pool.request('POST', url, postdata)
-                logdbg("Backfill: archive http response.data %s" %
+                logdbg("backfill: archive http response.data %s" %
                        response.data)
                 if response.status == 200:
                     return response
                 else:
                     # from here must either set retry=True or raise a
                     # FatalSyncError
-                    logerr("remote: http request failed (%s %s): %s" %
+                    logerr("backfill: http request failed (%s %s): %s" %
                            (response.status,
                             response.reason,
                             response.data))
@@ -691,7 +678,7 @@ class SyncService(weewx.engine.StdService):
                         else:
                             retry = True
                     else:
-                        message = ("remote: Request to %s failed, server "
+                        message = ("backfill: Request to %s failed, server "
                                    "returned %s status with reason '%s'." %
                                    (url, response.status, response.reason))
                         # invalid credentials
@@ -706,24 +693,28 @@ class SyncService(weewx.engine.StdService):
                         loginf(message)
                         # don't retry on these errors
                         retry = False
-            except (socket.error, urllib3.exceptions.MaxRetryError) as e:
-                logerr("remote: failed http request attempt #%d to %s" % (
+            except (urllib3.exceptions.NewConnectionError) as e:
+                logerr("backfill: failed to connect to %s" % url)
+                logdbg("   ****  Reason: %s" % (e,))
+                retry = False
+            except (urllib3.exceptions.MaxRetryError) as e:
+                logerr("backfill: failed http request attempt #%d to %s" % (
                        count+1, url))
-                logerr("   ****  Reason: %s" % (e,))
+                logdbg("   ****  Reason: %s" % (e,))
                 retry = True
             if retry and count+1 < self.http_max_tries:
                 # wait a bit before retrying, ensuring that we exit if signaled
-                logdbg("remote: retrying again in %s seconds" % (
+                logdbg("backfill: retrying again in %s seconds" % (
                        self.http_retry_interval,))
                 self._wait(self.http_retry_interval)
         else:
-            logerr("remote: Failed to invoke %s after %d tries" % (
+            logerr("backfill: failed to invoke %s after %d tries" % (
                    url, self.http_max_tries))
 
     def _wait(self, duration):
         if duration is not None:
             if self.exit_event.wait(duration):
-                logdbg("remote: exit event signaled, aborting")
+                logdbg("backfill: exit event signaled, aborting")
                 raise AbortAndExit
 
 
@@ -781,31 +772,19 @@ class SyncThread(threading.Thread):
         self.make_http_request(self.update_url, postdata)
 
     def make_http_request(self, url, postdata):
-        try:
-            response = requests.get(url)
-            # 400 response is Okay as this request only checks if there is a
-            # working connection and it is responding. Check the database if
-            # you are unsure about the data (Real-time should be updating on
-            # the mesowx chart.
-            logdbg("response %s cookies %s response %s" %
-                   (response,
-                    response.cookies,
-                    response.status_code))
-        except requests.exceptions.ConnectionError:
-            logerr("LOOP updatedata.php: fatal connection error: "
-                   "is \"%s\" correct?" % url)
-            # then skip any meaningful / data attempts.
-            self.http_max_tries = 0
+        # updatedata.php (loop, raw data, real time)
         for count in range(self.http_max_tries):
             try:
                 response = self.http_pool.request('POST', url, postdata)
-                logdbg("LOOP: http response.data %s" % response.data)
+                logdbg("loop: http response.data %s" % response.data)
+                logdbg("loop: http response.status %s" % response.status)
+                logdbg("loop: http response.reason %s" % response.reason)
                 if response.status == 200:
                     return response
                 else:
                     # from here must either set retry=True or raise a
                     # FatalSyncError
-                    logerr("sync: http request failed (%s %s): %s" %
+                    logerr("loop: http request failed (%s %s): %s" %
                            (response.status,
                             response.reason,
                             response.data))
@@ -817,7 +796,7 @@ class SyncThread(threading.Thread):
                         else:
                             retry = True
                     else:
-                        message = ("sync: Request to %s failed, server "
+                        message = ("loop: Request to %s failed, server "
                                    "returned %s status with reason '%s'." %
                                    (url, response.status, response.reason))
                         # invalid credentials
@@ -831,18 +810,22 @@ class SyncThread(threading.Thread):
                             message += " Check your entity configuration."
                         loginf(message)
                         retry = False
-            except (socket.error, urllib3.exceptions.MaxRetryError) as e:
-                logerr("sync: failed http request attempt #%d to %s" % (
+            except (urllib3.exceptions.NewConnectionError) as e:
+                logerr("loop: failed to connect to %s" % url)
+                logdbg("   ****  Reason: %s" % (e,))
+                retry = False
+            except (urllib3.exceptions.MaxRetryError) as e:
+                logerr("loop: failed http request attempt #%d to %s" % (
                        count+1, url))
-                logerr("   ****  Reason: %s" % (e,))
+                logdbg("   ****  Reason: %s" % (e,))
                 retry = True
             if retry and count+1 < self.http_max_tries:
                 # wait a bit before retrying, ensuring that we exit if signaled
-                logdbg("sync: retrying again in %s seconds" % (
+                logdbg("loop: retrying again in %s seconds" % (
                        self.http_retry_interval,))
                 self._wait(self.http_retry_interval)
         else:
-            loginf("sync: Failed to invoke %s after %d tries" % (
+            loginf("loop: Failed to invoke %s after %d tries" % (
                    url, self.http_max_tries))
 
     def _wait(self, duration):
