@@ -287,7 +287,8 @@ class SyncService(weewx.engine.StdService):
             except (urllib3.exceptions.NewConnectionError) as e:
                 syslog.syslog(syslog.LOG_ERR, "sync: failed to connect to %s" % url)
                 syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))
-                retry = False
+                retry = False  # if we can't find it on start up, assume *we*
+                               # made an error and stop retrying
             except (socket.error, urllib3.exceptions.MaxRetryError) as e:
                 syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
                 syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))
@@ -387,7 +388,7 @@ class SyncThread(threading.Thread):
             except (urllib3.exceptions.NewConnectionError) as e:
                 syslog.syslog(syslog.LOG_ERR, "sync: failed to connect to %s" % url)
                 syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))
-                retry = False
+                retry = True  # maybe only a temporary outage.
             except (socket.error, urllib3.exceptions.MaxRetryError) as e:
                 syslog.syslog(syslog.LOG_ERR, "sync: failed http request attempt #%d to %s" % (count+1, url))
                 syslog.syslog(syslog.LOG_DEBUG, "   ****  Reason: %s" % (e,))

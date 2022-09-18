@@ -29,12 +29,10 @@ try:
 except ImportError:
     import Queue as queue
 import json
-# import socket
 import itertools
 import time
 import threading
 import urllib3
-# import requests
 
 import weewx
 import weewx.restx
@@ -611,7 +609,7 @@ class SyncService(weewx.engine.StdService):
             self._wait(self.batch_send_interval)
 
     def fetch_latest_remote_datetime(self):
-        logdbg("remote: requesting latest dateTime from %s" %
+        logdbg("remote backfill: requesting latest dateTime from %s" %
                self.latest_url)
         # A valid timestamp to be used to halt the backfill on an invalid
         # json response (which means no datetime was returned)
@@ -630,7 +628,7 @@ class SyncService(weewx.engine.StdService):
         except Exception as e:
             # NoneType object has no attribute data - server not responding
             logdbg("remote: Exception as %s" % e)
-            logerr("remote: no datetime available. Returning current"
+            logerr("remote backfill: no datetime available. Returning current"
                    " time %s to halt any backfill operation."
                    " ( is the server running? )" % current_time)
             return current_time
@@ -652,9 +650,9 @@ class SyncService(weewx.engine.StdService):
         datajson = json.dumps(records)
         postdata = {'entity_id': self.entity_id, 'data': datajson,
                     'security_key': self.security_key}
-        self.make_http_request(self.update_url, postdata)
+        self.backfill_http_request(self.update_url, postdata)
 
-    def make_http_request(self, url, postdata):
+    def backfill_http_request(self, url, postdata):
         # data.php (backfilling)
         for count in range(self.http_max_tries):
             try:
@@ -696,7 +694,8 @@ class SyncService(weewx.engine.StdService):
             except (urllib3.exceptions.NewConnectionError) as e:
                 logerr("backfill: failed to connect to %s" % url)
                 logdbg("   ****  Reason: %s" % (e,))
-                retry = False
+                retry = False  # if we can't find it on start up, assume *we*
+                               # made an error and stop retrying
             except (urllib3.exceptions.MaxRetryError) as e:
                 logerr("backfill: failed http request attempt #%d to %s" % (
                        count+1, url))
@@ -813,7 +812,7 @@ class SyncThread(threading.Thread):
             except (urllib3.exceptions.NewConnectionError) as e:
                 logerr("loop: failed to connect to %s" % url)
                 logdbg("   ****  Reason: %s" % (e,))
-                retry = False
+                retry = True  # maybe only a temporary outage.
             except (urllib3.exceptions.MaxRetryError) as e:
                 logerr("loop: failed http request attempt #%d to %s" % (
                        count+1, url))
