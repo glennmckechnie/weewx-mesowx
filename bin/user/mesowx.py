@@ -498,7 +498,7 @@ class SyncService(weewx.engine.StdService):
             logdbg("won't sync raw records (raw_entity_id not configured)")
 
     def new_archive_record(self, event):
-        if self.archive_thread.isAlive():
+        if self.archive_thread.is_alive():
             self.archive_queue.put(event.record)
             logdbg("remote archive: put record in queue %s" %
                    weeutil.weeutil.timestamp_to_string(
@@ -508,7 +508,7 @@ class SyncService(weewx.engine.StdService):
                    "due to previous error." % event.record['dateTime'])
 
     def new_loop_packet(self, event):
-        if self.raw_thread.isAlive():
+        if self.raw_thread.is_alive():
             packet = event.packet
             # It's possible for records with duplicate dateTimes - this occurs
             # when an archive packet  is processed since the LOOP packets are
@@ -537,10 +537,10 @@ class SyncService(weewx.engine.StdService):
 
     @staticmethod
     def _join_thread(thread):
-        if thread is not None and thread.isAlive():
+        if thread is not None and thread.is_alive():
             # Wait up to 20 seconds for the thread to exit:
             thread.join(20.0)
-            if thread.isAlive():
+            if thread.is_alive():
                 logerr("sync: Unable to shut down syncing thread: %s" %
                        thread.name)
             else:

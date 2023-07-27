@@ -1,4 +1,15 @@
 
+**27th July 2023**
+
+* Adjust mesowx.py according to Issue #8
+   https://github.com/glennmckechnie/weewx-mesowx/issues/8
+   It seems that Thread.isAlive() was deprecated in Python 3.7 in favor of is_alive()
+   (which has been around since Python v2.6), and removed in Python v3.9.
+* While this is an untested fix (by me - I'm still running python 3.7) I note that
+  this fix exists in the main weewx code base, and it obviously works for MaffooClock.
+  And Thank you MaffooClock for the watchful eyes and heads up.
+
+
 **17th Sept 2022**
 
 * Code tidy up. 

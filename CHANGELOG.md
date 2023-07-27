@@ -1,5 +1,16 @@
 # MesoWx Change Log #
 
+## 0.6.5 (2023-07-27) ##
+
+* Playing Catchup..
+* Untested fix (by me - I'm still running python 3.7)
+   Adjust mesowx.py according to Issue #8
+   https://github.com/glennmckechnie/weewx-mesowx/issues/8
+   It seems that Thread.isAlive() was deprecated in Python 3.7 in favor of is_alive()
+   (which has been around since Python v2.6), and removed in Python v3.9.
+* Also an older fix which I apparently uploaded, but didn't note here...
+   rejig to stop backfill but retry on data
+
 ## 0.6.4 (2020-06-27) ##
 
 * text labels are now configurable to accept alternate names or languages.
