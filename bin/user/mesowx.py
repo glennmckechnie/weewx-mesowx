@@ -422,7 +422,7 @@ class SyncService(weewx.engine.StdService):
         # new_loop_packet() for more info
         self.lastLoopDateTime = 0
         # supply a user agent string to satisfy hosting servers
-        self.u_agent= ({'User-Agent':'MesoWX/0.6.3 (https://github.com/glennmckechnie/weewx-mesowx)'})
+        self.u_agent= ({'User-Agent':'MesoWX/{} (https://github.com/glennmckechnie/weewx-mesowx)'.format(VERSION)})
         # self.u_agent= ({'User-Agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0'})
         # using a http connection pool to potentially save some overhead and
         # server burden if keep alive is enabled, maxsize is set to 2 since
@@ -1216,8 +1216,8 @@ class Mesowx(SearchList):
         self.data_limit_seconds = int(self.data_limit * 3600)
         # polling interval: time between loop packets in seconds (for dash
         # refresh rate)
-        self.poll_ms = int(self.generator.config_dict['Mesowx'].get(
-                       'loop_polling_interval', '60')) * 1000
+        self.poll_ms = int(float(self.generator.config_dict['Mesowx'].get(
+                       'loop_polling_interval', '60')) * 1000)
         wee_units = self.generator.config_dict['StdConvert'].get(
                          'target_unit', 'METRICWX')
 
