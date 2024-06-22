@@ -1,5 +1,5 @@
 **22nd June 2024**
-* We have a fix for [Issue #3](https://github.com/glennmckechnie/weewx-mesowx/issues/8), along with some code tidy up. Thanks go to Bob.
+* We have a fix for [Issue #3](https://github.com/glennmckechnie/weewx-mesowx/issues/3), along with some code tidy up. Thanks go to Bob.
 * So, php version 8.x versions are now supported. And anything older can continue to use the [old releases](https://github.com/glennmckechnie/weewx-mesowx/releases)
 
 **27th July 2023**
