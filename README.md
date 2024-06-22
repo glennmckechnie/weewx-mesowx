@@ -1,6 +1,7 @@
 **22nd June 2024**
 * We have a fix for [Issue #3](https://github.com/glennmckechnie/weewx-mesowx/issues/3), along with some code tidy up. Thanks go to Bob.
 * So, php version 8.x versions are now supported. And anything older can continue to use the [old releases](https://github.com/glennmckechnie/weewx-mesowx/releases)
+* No module named 'pymysql' ?  fix with (for debian)  apt install python3-pymysql
 
 **27th July 2023**
 
@@ -85,7 +86,7 @@ This repo is a fork of MesoWx as originally implemented at [Mesowx](https://bitb
 
 MesoWx is a real-time HTML front-end for visualizing personal weather station data. It provides a real-time graph and console display, and dynamic graphs of your weather station history allowing you to explore the details of any recorded time period in your data.
 
-MesoWx displays data from a database and does not itself interface with any weather station hardware directly, however, being built upon Meso it supports an HTTP API for remotely adding data, which allows integration with existing weather station software. MesoWx integrates well with Weewx and should support any weather station that it supports.
+MesoWx displays data from a MySQL database and does not itself interface with any weather station hardware directly, however, being built upon Meso it supports an HTTP API for remotely adding data, which allows integration with existing weather station software. MesoWx integrates well with Weewx and should support any weather station that it supports.
 
 ![v0.6.4-1month-archive](lirpa/images/v0.6.4-1month-archive.png)
 ![Samsung-landscape-v064.png](lirpa/images/Samsung-landscape-v064.png)
@@ -109,7 +110,7 @@ Previously it took a lot of effort to modify Mesowx to personal taste. The defau
 
  1. A modern web browser is required for the out of the box front-end (Chrome, Firefox, Safari, IE10+)
  2. Extremely large archive databases likely won't perform very well at the moment (my archive database contains 350,000+ records and has performed adequately), especially on a low power server.
- 3. To record the raw (loop) packets it uses mysql, these days MQTT has filled that niche and is far better suited to it. This skin does not use MQTT.
+ 3. To record the raw (loop) packets it uses a mysql database, these days MQTT has filled that niche and is far better suited to it. This skin does not use MQTT.
 
 ## Warnings
 
@@ -143,6 +144,13 @@ I've been more rigourous with packaging up the point releases as something meani
 
     wget -O weewx-mesowx.zip https://github.com/glennmckechnie/weewx-mesowx/archive/master.zip
     wee_extension --install weewx-mesowx.zip
+
+    or, for WeeWX V5.x ...
+
+    weectl extension install weewx-mesowx.zip
+    
+    If  an error is logged ... No module named 'pymysql' ?  then fix it with (for debian) ...  apt install python3-pymysql
+
 
 ## Configuration values in weewx.conf and skin.conf
 
