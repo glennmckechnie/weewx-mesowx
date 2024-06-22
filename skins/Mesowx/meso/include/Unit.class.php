@@ -161,7 +161,7 @@ class UnitConvert {
         if (!array_key_exists($toUnit, $fromFunctions)) {
             $formula = self::$FORMULA[$fromUnit][$toUnit];
             $functionBody = 'return '. str_replace('#', '$v', $formula) .';';
-            $fromFunctions[$toUnit] = create_function('$v', $functionBody);
+            $fromFunctions[$toUnit] = fn($v) => eval($functionBody);
         }
         return $fromFunctions[$toUnit];
     }

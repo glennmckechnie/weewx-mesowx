@@ -60,7 +60,7 @@ if(!$params) {
     exit;
 }
 
-if(!array_key_exists('entityId', $params)) {
+if(!property_exists( $params, 'entityId')) {
     HttpUtil::send400('Must specify an entityId');
     exit;
 }
