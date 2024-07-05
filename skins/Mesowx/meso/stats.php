@@ -162,7 +162,7 @@ abstract class CompareTracker {
 }
 class MaxTracker extends CompareTracker {
     function __construct() {
-        parent::__construct(-INF); // minimum int value
+        parent::__construct(-1e99); // minimum int value
     }
     protected function compare( $newValue, $oldValue ) {
         return $newValue > $oldValue;
@@ -173,7 +173,7 @@ class MaxTracker extends CompareTracker {
 }
 class MinTracker extends CompareTracker {
     function __construct() {
-        parent::__construct(INF);
+        parent::__construct(1e99);
     }
     protected function compare( $newValue, $oldValue ) {
         return $newValue < $oldValue;
