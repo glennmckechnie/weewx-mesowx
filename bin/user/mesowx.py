@@ -33,6 +33,7 @@ import itertools
 import time
 import threading
 import urllib3
+import urllib.parse
 
 import weewx
 import weewx.restx
@@ -100,7 +101,7 @@ schema = [
     ('windGustDir', 'REAL'),
     ('rainRate', 'REAL'),
     ('rain', 'REAL'),
-    #('dayrain', 'REAL'),  # dayRain for DAVIS stations
+    ('dayrain', 'REAL'),  # dayRain for DAVIS stations
     ('dewpoint', 'REAL'),
     ('windchill', 'REAL'),
     ('heatindex', 'REAL'),
@@ -654,9 +655,15 @@ class SyncService(weewx.engine.StdService):
 
     def backfill_http_request(self, url, postdata):
         # data.php (backfilling)
+        # urllib3 2.x fails to encode form data when using `fields` param,
+        # so we pre-encode the body and set Content-Type explicitly.
+        encoded_body = urllib.parse.urlencode(postdata)
+        request_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         for count in range(self.http_max_tries):
             try:
-                response = self.http_pool.request('POST', url, postdata)
+                response = self.http_pool.request('POST', url,
+                                                  body=encoded_body,
+                                                  headers=request_headers)
                 logdbg("backfill: archive http response.data %s" %
                        response.data)
                 if response.status == 200:
@@ -772,9 +779,15 @@ class SyncThread(threading.Thread):
 
     def make_http_request(self, url, postdata):
         # updatedata.php (loop, raw data, real time)
+        # urllib3 2.x fails to encode form data when using `fields` param,
+        # so we pre-encode the body and set Content-Type explicitly.
+        encoded_body = urllib.parse.urlencode(postdata)
+        request_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         for count in range(self.http_max_tries):
             try:
-                response = self.http_pool.request('POST', url, postdata)
+                response = self.http_pool.request('POST', url,
+                                                  body=encoded_body,
+                                                  headers=request_headers)
                 logdbg("loop: http response.data %s" % response.data)
                 logdbg("loop: http response.status %s" % response.status)
                 logdbg("loop: http response.reason %s" % response.reason)
